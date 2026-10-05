@@ -1,4 +1,4 @@
-# Optimizador Logístico de Cisternas de Agua SEDAPAL — Equipo 03
+# Optimizador Logístico de Cisternas de Agua SEDAPAL — Equipo 08
 
 **Problema y quién lo sufre.** Las familias en zonas periféricas y entidades vulnerables (hospitales/colegios) en Lima pasan demasiados días sin abastecimiento durante los cortes masivos de agua debido a una distribución logística deficiente.
 **Modo base.** Actualmente, SEDAPAL asigna los camiones cisterna mediante una regla de cola simple (FIFO): se envía el agua en el estricto orden en que ingresan las llamadas, ignorando la densidad poblacional y la urgencia.
