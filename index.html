@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>SIMULADOR DE LOGISTICA DE AGUA - SEDAPAL</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #07131c;
+            --card: #0d2230;
+            --line: #1b3a4f;
+            --tx: #d7e6ef;
+            --mu: #7f9fb3;
+            --ac: #38bdf8;
+            --ok: #22c55e;
+            --wa: #facc15;
+            --er: #ef4444
+        }
+
+        * {
+            box-sizing: border-box
+        }
+        body {
+            margin: 0;
+            background: radial-gradient(1200px 600px at 70% -10%, #0e2d42, var(--bg));
+            color: var(--tx);
+            font: 14px/1.45 "Segoe UI", system-ui, sans-serif
+        }
+
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--line)
+        }
+
+        h1 {
+            font-size: 18px;
+            margin: 0;
+            font-weight: 650
+        }
+
+        h2 {
+            font-size: 13px;
+            margin: 0 0 10px;
+            color: var(--ac);
+            font-weight: 600
+        }
+
+        #kpis {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+        #kpis span {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 4px 10px;
+            color: var(--mu)
+        }
+
+        #kpis b {
+            color: var(--tx)
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 290px minmax(0, 1fr) 370px;
+            gap: 14px;
+            padding: 14px 20px
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 14px;
+            min-width: 0
+        }
+
+        .wide {
+            grid-column: 1/-1
+        }
+
+        label {
+            display: block;
+            margin: 8px 0 2px;
+            color: var(--mu);
+            font-size: 12px
+        }
+
+        label output {
+            float: right;
+            color: var(--tx)
+        }
+
+        input,
+        select {
+            width: 100%;
+            background: #091a26;
+            color: var(--tx);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 6px 8px;
+            font: inherit
+        }
+
+        input[type=range] {
+            padding: 0;
+            accent-color: var(--ac)
+        }
+
+        .row {
+            display: flex;
+            gap: 8px
+        }
+
+        .row>* {
+            flex: 1
+        }
+
+        button {
+            background: var(--ac);
+            color: #04202e;
+            border: 0;
+            border-radius: 6px;
+            padding: 8px 10px;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer
+        }
+
+        button.g {
+            background: #16384c;
+            color: var(--tx)
+        }
+
+        button:disabled {
+            opacity: .5;
+            cursor: wait
+        }
+
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+            outline: 2px solid var(--wa);
+            outline-offset: 1px
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid var(--line);
+            margin: 14px 0
+        }
+
+        #cv {
+            width: 100%;
+            aspect-ratio: 1/.85;
+            display: block;
+            background: #08192a;
+            border-radius: 8px
+        }
+
+        .lg {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+            color: var(--mu);
+            font-size: 12px
+        }
+
+        .lg i {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 4px
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px
+        }
+
+        th,
+        td {
+            padding: 4px 6px;
+            text-align: right;
+            border-bottom: 1px solid var(--line)
+        }
+
+        th:first-child,
+        td:first-child,
+        th.l,
+        td.l {
+            text-align: left
+        }
+
+        th {
+            color: var(--mu);
+            font-weight: 500
+        }
+
+        .sc {
+            max-height: 210px;
+            overflow: auto;
+            margin-bottom: 12px
+        }
+
+        .best {
+            color: var(--ok);
+            font-weight: 700
+        }
+
+        .more {
+            color: var(--mu);
+            font-size: 11px;
+            padding: 4px 0
+        }
+
+        .charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 14px
+        }
+
+        .charts div {
+            position: relative;
+            height: 300px
+        }
+
+        @media(max-width:1100px) {
+            main {
+                grid-template-columns: 1fr
+            }
+
+            .charts {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>💧 SEDAPAL · Simulador de logística de cisternas</h1>
+        <div id="kpis"></div>
+    </header>
+    <main>
+        <section class="card">
+            <h2>Controles</h2>
+            <label>Agente activo</label>
+            <select id="ag">
+                <option value="fifo">Base (FIFO)</option>
+                <option value="reflejo">Reflejo simple</option>
+                <option value="util" selected>Utilidad (inteligente)</option>
+            </select>
+            <label>Cisternas totales (5–30)</label>
+            <input id="nt" type="number" min="5" max="30" value="8">
+            <div id="sl"></div>
+            <label><input id="auto" type="checkbox" checked style="width:auto"> Generar emergencias aleatorias</label>
+            <div class="row" style="margin-top:10px"><button id="play">▶ Play</button><button id="pause" class="g">⏸
+                    Pausa</button><button id="reset" class="g">↺ Reset</button></div>
+            <hr>
+            <h2>Petición manual</h2>
+            <label>Tipo de zona</label>
+            <select id="ft">
+                <option>Hospital</option>
+                <option>Colegio</option>
+                <option selected>Barrio</option>
+            </select>
+            <div class="row">
+                <div><label>Población (50–1000)</label><input id="fp" type="number" min="50" max="1000" value="400">
+                </div>
+                <div><label>Días sin agua (1–7)</label><input id="fy" type="number" min="1" max="7" value="3"></div>
+            </div>
+            <div class="row">
+                <div><label>Cerca del acopio</label><select id="fz"></select></div>
+                <div><label>Distancia (km)</label><input id="fd" type="number" min="0.5" max="14" step="0.5" value="3">
+                </div>
+            </div>
+            <button id="send" style="width:100%;margin-top:10px">Enviar petición</button>
+        </section>
+
+        <section class="card">
+            <h2>Red de abastecimiento</h2>
+            <canvas id="cv"></canvas>
+            <div class="lg"><span><i style="background:#38bdf8"></i>Acopio SEDAPAL</span><span><i
+                        style="background:#84cc16"></i>Urgencia baja</span><span><i
+                        style="background:#facc15"></i>Media</span><span><i style="background:#ef4444"></i>Crítica
+                    (parpadea)</span><span><i style="background:#22c55e"></i>Abastecido</span><span>Tamaño = población ·
+                    H hospital, C colegio, B barrio</span></div>
+        </section>
+
+        <section class="card">
+            <h2>Ventana perceptual (orden de llegada)</h2>
+            <div class="sc">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th class="l">Tipo</th>
+                            <th>Pob.</th>
+                            <th>Días</th>
+                            <th>Km</th>
+                        </tr>
+                    </thead>
+                    <tbody id="wp"></tbody>
+                </table>
+            </div>
+            <h2>Ventana de acción (orden del agente)</h2>
+            <div class="sc">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Prio.</th>
+                            <th>ID</th>
+                            <th class="l">Tipo</th>
+                            <th>Pob.</th>
+                            <th>Días</th>
+                        </tr>
+                    </thead>
+                    <tbody id="wa"></tbody>
+                </table>
+            </div>
+            <div id="ut">
+                <h2>Desglose del Agente de Utilidad</h2>
+                <div class="sc">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>V. base</th>
+                                <th>Pob.</th>
+                                <th>Días</th>
+                                <th>Dist.</th>
+                                <th>U total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wu"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="card wide">
+            <h2>Benchmark masivo · 100 peticiones, horizonte de 40 turnos, misma semilla para los 3 agentes</h2>
+            <div class="row" style="align-items:center;max-width:420px"><button id="bb">Ejecutar benchmark
+                    masivo</button><span id="bs" style="color:var(--mu)"></span></div>
+            <table style="margin-top:12px">
+                <thead>
+                    <tr>
+                        <th>Agente</th>
+                        <th>Tiempo prom. de espera (turnos)</th>
+                        <th>% críticas atendidas a tiempo</th>
+                        <th>Personas impactadas</th>
+                        <th>Distancia total (km)</th>
+                    </tr>
+                </thead>
+                <tbody id="bt">
+                    <tr>
+                        <td colspan="5" class="l" style="color:var(--mu)">Ejecuta el benchmark para ver la comparación.
+                            Una crítica está a tiempo si espera ≤ 8 turnos (hospital) o ≤ 14 (colegio).</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="charts">
+                <div><canvas id="c1"></canvas></div>
+                <div><canvas id="c2"></canvas></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const $ = s => document.querySelector(s),
+            cv = $('#cv'),
+            g = cv.getContext('2d');
+        const DEP = [
+            ['Norte', 50, 10],
+            ['Este', 90, 50],
+            ['Sur', 50, 90],
+            ['Oeste', 10, 50]
+        ].map(([n, x, y]) => ({
+            n,
+            x,
+            y
+        }));
+        const KM = .2,
+            SPD = 4,
+            TY = {
+                Hospital: 100,
+                Colegio: 50,
+                Barrio: 10
+            },
+            NM = {
+                fifo: 'Base (FIFO)',
+                reflejo: 'Reflejo simple',
+                util: 'Utilidad'
+            };
+        const SL = [
+            ['wv', 'W_vuln · valor base', 0, 3, .1, 1],
+            ['wp2', 'W_pob · población', 0, .2, .01, .05],
+            ['wd', 'W_días · días sin agua', 0, 10, .5, 4],
+            ['wx', 'W_dist · distancia (km)', 0, 8, .5, 3],
+            ['sp', 'Velocidad (turnos/s)', .5, 8, .5, 2]
+        ];
+        $('#sl').innerHTML = SL.map(([i, t, a, b, s, v]) => `<label>${t}<output>${v}</output></label><input id="${i}" type="range" min="${a}" max="${b}" step="${s}" value="${v}">`).join('');
+        $('#fz').innerHTML = DEP.map((d, i) => `<option value="${i}">${d.n}</option>`).join('');
+        document.querySelectorAll('input[type=range]').forEach(r => r.oninput = () => {
+            r.previousElementSibling.querySelector('output').textContent = r.value;
+            panels()
+        });
+
+        const km = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) * KM;
+        const W = () => ({
+            v: +$('#wv').value,
+            p: +$('#wp2').value,
+            d: +$('#wd').value,
+            x: +$('#wx').value
+        });
+        const ed = r => r.d0 + r.wait / 24;
+        const score = (r, w) => w.v * r.base + w.p * r.pob + w.d * ed(r) - w.x * r.dist;
+        const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+        const rng = s => () => {
+            s |= 0;
+            s = s + 0x6D2B79F5 | 0;
+            let t = Math.imul(s ^ s >>> 15, 1 | s);
+            t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+            return ((t ^ t >>> 14) >>> 0) / 4294967296
+        };
+
+        /* ---------- Motor de simulación (compartido por modo visual y benchmark) ---------- */
+        const mk = N => ({
+            t: 0,
+            nid: 1,
+            km: 0,
+            reqs: [],
+            trucks: Array.from({
+                length: N
+            }, (_, i) => ({
+                dep: i % 4,
+                busy: 0,
+                tot: 0,
+                out: 0,
+                req: null
+            }))
+        });
+
+        function add(S, o) {
+            const r = {
+                id: S.nid++,
+                tipo: o.tipo,
+                base: TY[o.tipo],
+                pob: o.pob,
+                d0: o.d0,
+                x: o.x,
+                y: o.y,
+                at: S.t,
+                wait: 0,
+                st: 'En Espera',
+                end: null
+            };
+            r.dist = Math.min(...DEP.map(d => km(d, r)));
+            S.reqs.push(r);
+            return r
+        }
+
+        function spec(R) {
+            const u = R();
+            let x, y;
+            do {
+                x = 6 + R() * 88;
+                y = 6 + R() * 88
+            } while (DEP.some(d => Math.hypot(d.x - x, d.y - y) < 9));
+            return {
+                tipo: u < .1 ? 'Hospital' : u < .35 ? 'Colegio' : 'Barrio',
+                pob: 50 + Math.floor(R() * 951),
+                d0: 1 + Math.floor(R() * 7),
+                x,
+                y
+            }
+        }
+
+        function order(a, q, w) {
+            if (a === 'fifo') return q.slice().sort((x, y) => x.id - y.id);
+            if (a === 'reflejo') return q.slice().sort((x, y) => (y.tipo === 'Hospital') - (x.tipo === 'Hospital') || ed(y) - ed(x) || x.id - y.id);
+            return q.map(r => (r.u = score(r, w), r)).sort((x, y) => y.u - x.u || x.id - y.id)
+        }
+
+        function dispatch(S, a, w) {
+            const q = S.reqs.filter(r => r.st === 'En Espera');
+            if (!q.length) return;
+            for (const r of order(a, q, w)) {
+                let best = null,
+                    bd = 1e9;
+                for (const k of S.trucks)
+                    if (!k.busy) {
+                        const d = km(DEP[k.dep], r);
+                        if (d < bd) {
+                            bd = d;
+                            best = k
+                        }
+                    }
+                if (!best) break;
+                best.req = r;
+                best.out = Math.max(1, Math.ceil(bd / SPD));
+                best.tot = 2 * best.out;
+                best.busy = best.tot;
+                r.st = 'En Ruta';
+                S.km += 2 * bd
+            }
+        }
+
+        function step(S, a, w, arr) {
+            S.t++;
+            for (const k of S.trucks)
+                if (k.busy) {
+                    k.busy--;
+                    if (k.req && k.tot - k.busy === k.out) {
+                        k.req.st = 'Abastecido';
+                        k.req.end = S.t;
+                        k.req.wait = S.t - k.req.at
+                    }
+                    if (!k.busy) k.req = null
+                }
+            for (const r of S.reqs)
+                if (r.st !== 'Abastecido') r.wait = S.t - r.at;
+            arr && arr(S);
+            dispatch(S, a, w)
+        }
+
+        function bench(a, N, w, specs, H = 40) {
+            const S = mk(N);
+            let i = 0;
+            for (let t = 0; t < H; t++) step(S, a, w, s => {
+                while (i < specs.length && specs[i].t <= s.t) add(s, specs[i++])
+            });
+            const ok = r => r.st === 'Abastecido',
+                cr = S.reqs.filter(r => r.tipo !== 'Barrio');
+            return {
+                wait: S.reqs.reduce((s, r) => s + (ok(r) ? r.wait : H - r.at), 0) / S.reqs.length,
+                crit: cr.filter(r => ok(r) && r.wait <= (r.tipo === 'Hospital' ? 8 : 14)).length / cr.length * 100,
+                ppl: S.reqs.filter(ok).reduce((s, r) => s + r.pob, 0),
+                km: S.km
+            }
+        }
+
+        /* ----------estado visual y paneles---------- */
+        let S, playing = false,
+            acc = 0,
+            last = 0;
+        const tickMs = () => 1000 / +$('#sp').value;
+
+        function reset() {
+            const N = clamp(Math.round(+$('#nt').value) || 8, 5, 30);
+            $('#nt').value = N;
+            S = mk(N);
+            acc = 0;
+            playing = false;
+            for (let i = 0; i < 5; i++) add(S, spec(Math.random));
+            panels()
+        }
+
+        function tick() {
+            step(S, $('#ag').value, W(), s => {
+                if ($('#auto').checked && Math.random() < .45) add(s, spec(Math.random))
+            });
+            panels()
+        }
+
+        function panels() {
+            const a = $('#ag').value,
+                w = W(),
+                q = S.reqs.filter(r => r.st === 'En Espera'),
+                o = order(a, q, w),
+                f = r => ed(r).toFixed(1);
+            const lim = (arr, fn) => arr.slice(0, 10).map(fn).join('') + (arr.length > 10 ? `<tr><td colspan="6" class="more">+${arr.length - 10} más en cola</td></tr>` : '');
+            $('#wp').innerHTML = lim(q, r => `<tr><td>#${r.id}</td><td class="l">${r.tipo}</td><td>${r.pob}</td><td>${f(r)}</td><td>${r.dist.toFixed(1)}</td></tr>`);
+            $('#wa').innerHTML = lim(o, (r, i) => `<tr><td>${i + 1}</td><td>#${r.id}</td><td class="l">${r.tipo}</td><td>${r.pob}</td><td>${f(r)}</td></tr>`);
+            $('#ut').style.display = a === 'util' ? '' : 'none';
+            if (a === 'util') $('#wu').innerHTML = lim(o, r => `<tr><td>#${r.id}</td><td>${r.base}</td><td>${r.pob}</td><td>${f(r)}</td><td>${r.dist.toFixed(1)}</td><td class="best">${r.u.toFixed(1)}</td></tr>`);
+            const c = s => S.reqs.filter(r => r.st === s),
+                done = c('Abastecido');
+            $('#kpis').innerHTML = `<span>Turno <b>${S.t}</b></span><span>En espera <b>${q.length}</b></span><span>En ruta <b>${c('En Ruta').length}</b></span><span>Abastecidos <b>${done.length}</b></span><span>Personas <b>${done.reduce((s, r) => s + r.pob, 0)}</b></span><span>Km <b>${S.km.toFixed(1)}</b></span>`
+        }
+
+        /* ----------dibujo del mapa---------- */
+        function fit() {
+            const d = devicePixelRatio || 1;
+            cv.width = cv.clientWidth * d;
+            cv.height = cv.clientHeight * d
+        }
+        addEventListener('resize', fit);
+
+        function draw(ts) {
+            const w = cv.width,
+                h = cv.height,
+                u = w / 100,
+                X = x => x * w / 100,
+                Y = y => y * h / 100,
+                al = Math.min(1, acc / tickMs());
+            g.clearRect(0, 0, w, h);
+            g.strokeStyle = 'rgba(56,189,248,.06)';
+            g.lineWidth = 1;
+            for (let i = 10; i < 100; i += 10) {
+                g.beginPath();
+                g.moveTo(X(i), 0);
+                g.lineTo(X(i), h);
+                g.moveTo(0, Y(i));
+                g.lineTo(w, Y(i));
+                g.stroke()
+            }
+            for (const k of S.trucks)
+                if (k.busy && k.req) {
+                    const d = DEP[k.dep],
+                        r = k.req;
+                    g.strokeStyle = 'rgba(56,189,248,.3)';
+                    g.setLineDash([u, u]);
+                    g.beginPath();
+                    g.moveTo(X(d.x), Y(d.y));
+                    g.lineTo(X(r.x), Y(r.y));
+                    g.stroke();
+                    g.setLineDash([])
+                }
+            const pulse = .5 + .5 * Math.sin(ts / 180);
+            for (const r of S.reqs) {
+                if (r.st === 'Abastecido' && S.t - r.end > 5) continue;
+                const e = ed(r),
+                    done = r.st === 'Abastecido',
+                    rad = u * (.9 + r.pob / 1000 * 1.9);
+                const col = done ? '#22c55e' : e < 2.5 ? '#84cc16' : e < 4.5 ? '#facc15' : '#ef4444';
+                g.globalAlpha = done ? Math.max(.25, 1 - (S.t - r.end) / 6) : 1;
+                if (!done && e >= 4.5) {
+                    g.fillStyle = `rgba(239,68,68,${.15 + .3 * pulse})`;
+                    g.beginPath();
+                    g.arc(X(r.x), Y(r.y), rad + u * (.8 + pulse * 1.2), 0, 7);
+                    g.fill()
+                }
+                g.fillStyle = col;
+                g.beginPath();
+                g.arc(X(r.x), Y(r.y), rad, 0, 7);
+                g.fill();
+                if (r.st === 'En Ruta') {
+                    g.strokeStyle = '#fff';
+                    g.lineWidth = 2;
+                    g.stroke()
+                }
+                g.fillStyle = '#04202e';
+                g.font = `700 ${rad * 1.05}px sans-serif`;
+                g.textAlign = 'center';
+                g.textBaseline = 'middle';
+                g.fillText(done ? '✓' : r.tipo[0], X(r.x), Y(r.y) + 1);
+                if (!done) {
+                    g.fillStyle = '#9fb8c8';
+                    g.font = `${u * 1.5}px sans-serif`;
+                    g.fillText('#' + r.id, X(r.x), Y(r.y) + rad + u * 1.5)
+                }
+                g.globalAlpha = 1
+            }
+            for (const k of S.trucks)
+                if (k.busy && k.req) {
+                    const p = Math.min(1, (k.tot - k.busy + (playing ? al : 0)) / k.tot),
+                        d = DEP[k.dep],
+                        r = k.req,
+                        f = p < .5 ? p * 2 : (p - .5) * 2,
+                        a = p < .5 ? d : r,
+                        b = p < .5 ? r : d;
+                    const x = X(a.x + (b.x - a.x) * f),
+                        y = Y(a.y + (b.y - a.y) * f);
+                    g.shadowColor = '#38bdf8';
+                    g.shadowBlur = 12;
+                    g.fillStyle = p < .5 ? '#e0f2fe' : '#7dd3fc';
+                    g.beginPath();
+                    g.arc(x, y, u * .9, 0, 7);
+                    g.fill();
+                    g.shadowBlur = 0
+                }
+            DEP.forEach((d, i) => {
+                const idle = S.trucks.filter(k => k.dep === i && !k.busy).length,
+                    tot = S.trucks.filter(k => k.dep === i).length;
+                g.shadowColor = '#38bdf8';
+                g.shadowBlur = 18;
+                g.fillStyle = '#0ea5e9';
+                g.beginPath();
+                g.arc(X(d.x), Y(d.y), u * 3.2, 0, 7);
+                g.fill();
+                g.shadowBlur = 0;
+                g.fillStyle = '#04202e';
+                g.textAlign = 'center';
+                g.textBaseline = 'middle';
+                g.font = `700 ${u * 2}px sans-serif`;
+                g.fillText('💧', X(d.x), Y(d.y) + 1);
+                g.fillStyle = '#d7e6ef';
+                g.font = `600 ${u * 1.7}px sans-serif`;
+                g.fillText(`${d.n} · ${idle}/${tot}`, X(d.x), Y(d.y) + u * 5.2)
+            })
+        }
+
+        function loop(ts) {
+            const dt = Math.min(ts - last, 100);
+            last = ts;
+            if (playing) {
+                acc += dt;
+                const T = tickMs();
+                while (acc >= T) {
+                    acc -= T;
+                    tick()
+                }
+            }
+            draw(ts);
+            requestAnimationFrame(loop)
+        }
+
+        /* ----------eventos ---------- */
+        $('#play').onclick = () => playing = true;
+        $('#pause').onclick = () => playing = false;
+        $('#reset').onclick = reset;
+        $('#nt').onchange = reset;
+        $('#ag').onchange = panels;
+        $('#send').onclick = () => {
+            const dp = DEP[+$('#fz').value],
+                dk = clamp(+$('#fd').value || 3, .5, 14) / KM;
+            let x, y, n = 0;
+            do {
+                const an = Math.random() * 6.283;
+                x = dp.x + Math.cos(an) * dk;
+                y = dp.y + Math.sin(an) * dk
+            } while ((x < 4 || x > 96 || y < 4 || y > 96) && ++n < 60);
+            add(S, {
+                tipo: $('#ft').value,
+                pob: clamp(+$('#fp').value || 400, 50, 1000),
+                d0: clamp(+$('#fy').value || 1, 1, 7),
+                x: clamp(x, 4, 96),
+                y: clamp(y, 4, 96)
+            });
+            panels()
+        };
+
+        /* ----------benchmark y graficos de agentes ---------- */
+        let charts = [];
+        const COL = {
+            fifo: '#94a3b8',
+            reflejo: '#f59e0b',
+            util: '#38bdf8'
+        };
+        $('#bb').onclick = async () => {
+            const btn = $('#bb');
+            btn.disabled = true;
+            const N = clamp(Math.round(+$('#nt').value) || 8, 5, 30),
+                w = W(),
+                R = rng(Date.now() % 1e9);
+            const specs = Array.from({
+                length: 100
+            }, () => ({
+                t: 1 + Math.floor(R() * 24),
+                ...spec(R)
+            })).sort((a, b) => a.t - b.t),
+                res = {};
+            for (const a of ['fifo', 'reflejo', 'util']) {
+                $('#bs').textContent = `Simulando ${NM[a]}…`;
+                await new Promise(r => setTimeout(r, 40));
+                res[a] = bench(a, N, w, specs)
+            }
+            const ks = Object.keys(res),
+                vals = m => ks.map(a => res[a][m]),
+                best = (m, lo) => (lo ? Math.min : Math.max)(...vals(m));
+            const cell = (a, m, lo, fmt) => `<td class="${res[a][m] === best(m, lo) ? 'best' : ''}">${fmt(res[a][m])}</td>`;
+            $('#bt').innerHTML = ks.map(a => `<tr><td class="l">${NM[a]}</td>${cell(a, 'wait', 1, v => v.toFixed(1))}${cell(a, 'crit', 0, v => v.toFixed(0) + '%')}${cell(a, 'ppl', 0, v => v.toLocaleString('es-PE'))}${cell(a, 'km', 1, v => v.toFixed(1))}</tr>`).join('');
+            $('#bs').textContent = `Listo (${N} cisternas)`;
+            btn.disabled = false;
+            if (typeof Chart === 'undefined') {
+                $('#bs').textContent = 'No se pudo cargar Chart.js (revisa tu conexión).';
+                return
+            }
+            const idx = (a, m, lo) => {
+                const b = best(m, lo),
+                    v = res[a][m];
+                return +(lo ? (v ? b / v : 1) : (b ? v / b : 0)).toFixed(3) * 100
+            };
+            const labels = ['Menor espera', '% críticas a tiempo', 'Personas impactadas', 'Menor distancia'];
+            const ds = ks.map(a => ({
+                label: NM[a],
+                data: [idx(a, 'wait', 1), idx(a, 'crit', 0), idx(a, 'ppl', 0), idx(a, 'km', 1)],
+                borderColor: COL[a],
+                backgroundColor: a === 'util' ? 'rgba(56,189,248,.28)' : COL[a] + '55',
+                borderWidth: 2,
+                pointRadius: 3
+            }));
+            charts.forEach(c => c.destroy());
+            Chart.defaults.color = '#9fb8c8';
+            const opt = (t, extra = {}) => ({
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: t,
+                        color: '#d7e6ef'
+                    }
+                },
+                ...extra
+            });
+            charts = [new Chart($('#c1'), {
+                type: 'radar',
+                data: {
+                    labels,
+                    datasets: ds
+                },
+                options: opt('Radar · índice de desempeño (100 = mejor agente)', {
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 100,
+                            grid: {
+                                color: '#1b3a4f'
+                            },
+                            angleLines: {
+                                color: '#1b3a4f'
+                            },
+                            ticks: {
+                                display: false
+                            }
+                        }
+                    }
+                })
+            }),
+            new Chart($('#c2'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: ds.map(d => ({
+                        ...d,
+                        backgroundColor: d.borderColor
+                    }))
+                },
+                options: opt('Barras agrupadas · índice de desempeño', {
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            grid: {
+                                color: '#1b3a4f'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                })
+            })
+            ]
+        };
+
+        fit();
+        reset();
+        requestAnimationFrame(loop); 
+    </script>
+</body>
+
+</html>
