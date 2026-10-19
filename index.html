@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>SIMULADOR DE LOGISTICA DE AGUA POTABLE- SEDAPAL</title>
+    <title>SIMULADOR DE LOGISTICA DE AGUA POTABLE - SEDAPAL</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         :root {
@@ -161,37 +161,141 @@
             margin: 14px 0
         }
 
-        .map-container {
+        #mapw {
             position: relative;
-            width: 100%;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--line);
+            max-width: min(100%, 88vh);
+            margin: 0 auto
         }
 
         #cv {
             width: 100%;
-            aspect-ratio: 1/.85;
+            aspect-ratio: 1/1;
             display: block;
-            background: #73a851;
+            background: #0b1b27;
+            border-radius: 8px;
             cursor: grab;
-        }
-        #cv:active {
-            cursor: grabbing;
+            touch-action: none
         }
 
-        .map-tools {
-            display: flex;
-            gap: 6px;
-            margin-top: 8px;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 12px;
-            color: var(--mu);
-        }
-        .map-tools button {
-            padding: 4px 8px;
+        #tip {
+            position: absolute;
+            display: none;
+            pointer-events: none;
+            background: #07131c;
+            border: 1px solid var(--line);
+            border-radius: 5px;
+            padding: 3px 8px;
             font-size: 11px;
+            white-space: nowrap;
+            z-index: 3
+        }
+
+        #vc {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px
+        }
+
+        #vc button {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            font-size: 16px;
+            line-height: 1
+        }
+
+        .info {
+            position: absolute;
+            left: 8px;
+            bottom: 8px;
+            width: 250px;
+            max-width: calc(100% - 60px);
+            background: rgba(7, 19, 28, .94);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 12px
+        }
+
+        .info h3 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0 0 6px;
+            font-size: 13px;
+            color: var(--ac)
+        }
+
+        .info .x {
+            padding: 0 8px;
+            font-size: 15px
+        }
+
+        .info div {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 2px 0;
+            border-bottom: 1px solid #12303f
+        }
+
+        .info span {
+            color: var(--mu)
+        }
+
+        .info b {
+            text-align: right
+        }
+
+        .info i,
+        #fleet i {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            margin-right: 5px
+        }
+
+        #fleet {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px
+        }
+
+        #fleet span {
+            background: #091a26;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 3px 9px;
+            color: var(--mu)
+        }
+
+        #fleet b {
+            color: var(--tx)
+        }
+
+        .tools {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 10px
+        }
+
+        .tools label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin: 0;
+            color: var(--tx);
+            cursor: pointer
+        }
+
+        .tools input {
+            width: auto
         }
 
         .lg {
@@ -316,27 +420,31 @@
                 </div>
             </div>
             <button id="send" style="width:100%;margin-top:10px">Enviar petición</button>
+            <div id="msg" class="more" style="margin-top:6px"></div>
         </section>
 
         <section class="card">
-            <h2>Red de abastecimiento · Centro de Control Urbano</h2>
-            <div class="map-container">
+            <h2>Red de abastecimiento · Lima</h2>
+            <div id="mapw">
                 <canvas id="cv"></canvas>
+                <div id="tip"></div>
+                <div id="info" class="info" hidden></div>
+                <div id="vc"><button class="g" id="zi" title="Acercar">+</button><button class="g" id="zo"
+                        title="Alejar">−</button><button class="g" id="zr" title="Restablecer vista">⌖</button></div>
             </div>
-            <div class="map-tools">
-                <span>🔍 Arrastra o usa scroll para zoom. Clic en solicitudes/camiones.</span>
-                <div>
-                    <button id="btn-reset-zoom" class="g" title="Restablecer vista">↺ Reset Vista</button>
-                </div>
+            <div id="fleet"></div>
+            <div class="tools">
+                <label><input id="tb" type="checkbox" checked> Edificios</label>
+                <label><input id="tr" type="checkbox" checked> Solicitudes</label>
+                <label><input id="tt" type="checkbox" checked> Rutas</label>
+                <label><input id="tc" type="checkbox" checked> Centrales</label>
             </div>
-            <div class="lg">
-                <span><i style="background:#0284c7"></i>Central SEDAPAL</span>
-                <span><i style="background:#84cc16"></i>Urgencia baja</span>
-                <span><i style="background:#facc15"></i>Media</span>
-                <span><i style="background:#ef4444"></i>Crítica (parpadea)</span>
-                <span><i style="background:#22c55e"></i>Abastecido</span>
-                <span>🏥 Hospital | 🏫 Colegio | 🏠 Barrio</span>
-            </div>
+            <div class="lg"><span><i style="background:#2563eb"></i>Central de agua</span><span><i
+                        style="background:#84cc16"></i>Urgencia baja</span><span><i
+                        style="background:#facc15"></i>Media</span><span><i style="background:#ef4444"></i>Crítica
+                    (pulsa)</span><span><i style="background:#38bdf8"></i>Abasteciendo</span><span><i
+                        style="background:#22c55e"></i>Abastecido</span><span>Cruz = hospital · C colegio · B barrio.
+                    Arrastra para mover, rueda para zoom, clic para ver detalle.</span></div>
         </section>
 
         <section class="card">
@@ -422,146 +530,16 @@
         const $ = s => document.querySelector(s),
             cv = $('#cv'),
             g = cv.getContext('2d');
-
-        /* ---------- Definicion de Centrales y Grafo Urbano Estilo Vectorial Vectoral Vectorial ---------- */
         const DEP = [
             ['Norte', 50, 10],
             ['Este', 90, 50],
             ['Sur', 50, 90],
             ['Oeste', 10, 50]
-        ].map(([n, x, y]) => ({ n, x, y }));
-
-        // Configuración de red urbana con manzanas diurnas vectoriales
-        const GRID_STEPS = 6;
-        const nodes = [];
-        const edges = [];
-        
-        for (let gx = 0; gx <= GRID_STEPS; gx++) {
-            for (let gy = 0; gy <= GRID_STEPS; gy++) {
-                const nx = 10 + (gx / GRID_STEPS) * 80;
-                const ny = 10 + (gy / GRID_STEPS) * 80;
-                nodes.push({ id: gx * (GRID_STEPS + 1) + gy, x: nx, y: ny, gx, gy });
-            }
-        }
-
-        for (let gx = 0; gx <= GRID_STEPS; gx++) {
-            for (let gy = 0; gy <= GRID_STEPS; gy++) {
-                const currId = gx * (GRID_STEPS + 1) + gy;
-                if (gx < GRID_STEPS) {
-                    const rightId = (gx + 1) * (GRID_STEPS + 1) + gy;
-                    const dist = Math.hypot(nodes[currId].x - nodes[rightId].x, nodes[currId].y - nodes[rightId].y);
-                    edges.push({ from: currId, to: rightId, weight: dist });
-                    edges.push({ from: rightId, to: currId, weight: dist });
-                }
-                if (gy < GRID_STEPS) {
-                    const downId = gx * (GRID_STEPS + 1) + (gy + 1);
-                    const dist = Math.hypot(nodes[currId].x - nodes[downId].x, nodes[currId].y - nodes[downId].y);
-                    edges.push({ from: currId, to: downId, weight: dist });
-                    edges.push({ from: downId, to: currId, weight: dist });
-                }
-            }
-        }
-
-        function findNearestNode(x, y) {
-            let bestId = 0, minDist = 1e9;
-            for (let i = 0; i < nodes.length; i++) {
-                const d = Math.hypot(nodes[i].x - x, nodes[i].y - y);
-                if (d < minDist) {
-                    minDist = d;
-                    bestId = nodes[i].id;
-                }
-            }
-            return bestId;
-        }
-
-        function findStreetRoute(fromCoord, toCoord) {
-            const startNodeId = findNearestNode(fromCoord.x, fromCoord.y);
-            const goalNodeId = findNearestNode(toCoord.x, toCoord.y);
-            if (startNodeId === goalNodeId) return [fromCoord, toCoord];
-
-            const openSet = [startNodeId];
-            const cameFrom = new Map();
-            const gScore = new Map();
-            const fScore = new Map();
-
-            nodes.forEach(n => {
-                gScore.set(n.id, Infinity);
-                fScore.set(n.id, Infinity);
-            });
-            gScore.set(startNodeId, 0);
-            fScore.set(startNodeId, Math.hypot(nodes[startNodeId].x - nodes[goalNodeId].x, nodes[startNodeId].y - nodes[goalNodeId].y));
-
-            while (openSet.length > 0) {
-                openSet.sort((a, b) => fScore.get(a) - fScore.get(b));
-                const current = openSet.shift();
-
-                if (current === goalNodeId) {
-                    let temp = current;
-                    const nodePath = [nodes[current]];
-                    while (cameFrom.has(temp)) {
-                        temp = cameFrom.get(temp);
-                        nodePath.unshift(nodes[temp]);
-                    }
-                    nodePath.push(toCoord);
-                    return nodePath.map(n => ({ x: n.x, y: n.y }));
-                }
-
-                const neighbors = edges.filter(e => e.from === current);
-                for (const edge of neighbors) {
-                    const neighbor = edge.to;
-                    const tentativeGScore = gScore.get(current) + edge.weight;
-                    if (tentativeGScore < gScore.get(neighbor)) {
-                        cameFrom.set(neighbor, current);
-                        gScore.set(neighbor, tentativeGScore);
-                        fScore.set(neighbor, tentativeGScore + Math.hypot(nodes[neighbor].x - nodes[goalNodeId].x, nodes[neighbor].y - nodes[goalNodeId].y));
-                        if (!openSet.includes(neighbor)) openSet.push(neighbor);
-                    }
-                }
-            }
-            return [fromCoord, toCoord];
-        }
-
-        function calculateRouteDistance(path) {
-            let dist = 0;
-            for (let i = 0; i < path.length - 1; i++) {
-                dist += Math.hypot(path[i+1].x - path[i].x, path[i+1].y - path[i].y);
-            }
-            return dist * KM;
-        }
-
-        // Estructura de manzanas idéntica a la imagen de referencia
-        const blocks = [];
-        const roofColors = ['#b84335', '#d46538', '#cf4a30', '#a3392a', '#8a7d78'];
-        for (let gx = 0; gx < GRID_STEPS; gx++) {
-            for (let gy = 0; gy < GRID_STEPS; gy++) {
-                const x1 = 10 + (gx / GRID_STEPS) * 80 + 2.2;
-                const y1 = 10 + (gy / GRID_STEPS) * 80 + 2.2;
-                const w = (80 / GRID_STEPS) - 4.4;
-                const h = (80 / GRID_STEPS) - 4.4;
-
-                const idx = gx * GRID_STEPS + gy;
-                let feature = 'houses';
-                if (idx === 3 || idx === 18) feature = 'pool';
-                else if (idx === 14) feature = 'sports';
-                else if (idx === 22) feature = 'park';
-
-                // Generar pequeñas viviendas/edificios con techos estilizados dentro de la manzana
-                const houses = [];
-                const houseCount = 2 + (idx % 3);
-                for (let k = 0; k < houseCount; k++) {
-                    houses.push({
-                        rx: (k % 2) * 0.45 + 0.08,
-                        ry: Math.floor(k / 2) * 0.45 + 0.08,
-                        rw: 0.38,
-                        rh: 0.38,
-                        color: roofColors[(idx + k) % roofColors.length]
-                    });
-                }
-
-                blocks.push({ x: x1, y: y1, w, h, feature, houses });
-            }
-        }
-
+        ].map(([n, x, y]) => ({
+            n,
+            x,
+            y
+        }));
         const KM = .2,
             SPD = 4,
             TY = {
@@ -574,7 +552,6 @@
                 reflejo: 'Reflejo simple',
                 util: 'Utilidad'
             };
-
         const SL = [
             ['wv', 'W_vuln · valor base', 0, 3, .1, 1],
             ['wp2', 'W_pob · población', 0, .2, .01, .05],
@@ -582,7 +559,6 @@
             ['wx', 'W_dist · distancia (km)', 0, 8, .5, 3],
             ['sp', 'Velocidad (turnos/s)', .5, 8, .5, 2]
         ];
-
         $('#sl').innerHTML = SL.map(([i, t, a, b, s, v]) => `<label>${t}<output>${v}</output></label><input id="${i}" type="range" min="${a}" max="${b}" step="${s}" value="${v}">`).join('');
         $('#fz').innerHTML = DEP.map((d, i) => `<option value="${i}">${d.n}</option>`).join('');
         document.querySelectorAll('input[type=range]').forEach(r => r.oninput = () => {
@@ -590,7 +566,6 @@
             panels()
         });
 
-        const km = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) * KM;
         const W = () => ({
             v: +$('#wv').value,
             p: +$('#wp2').value,
@@ -608,60 +583,257 @@
             return ((t ^ t >>> 14) >>> 0) / 4294967296
         };
 
-        /* ---------- Motor de simulación ---------- */
-        const mk = N => ({
-            t: 0,
-            nid: 1,
-            km: 0,
-            reqs: [],
-            trucks: Array.from({
-                length: N
-            }, (_, i) => ({
-                id: i + 1,
-                dep: i % 4,
-                busy: 0,
-                tot: 0,
-                out: 0,
-                req: null,
-                route: [],
-                routeDist: 0
-            }))
-        });
+        /* ---------- Ciudad generada por código: calles, manzanas, edificios y grafo de navegación ---------- */
+        const CITY = (() => {
+            const R = rng(20417), pick = a => a[Math.floor(R() * a.length)];
+            const LAT = [0, 10, 30, 50, 70, 90, 100], RD = [10, 30, 50, 70, 90], RR = 3.8;
+            const isMain = v => v % 40 === 10, RW = v => isMain(v) ? 3.2 : 2.4;
+            const nodes = [], adj = [], edges = [], key = new Map(), mids = [];
+            const nd = (x, y) => {
+                const k = x.toFixed(1) + ',' + y.toFixed(1);
+                if (!key.has(k)) { key.set(k, nodes.length); nodes.push({ x, y }); adj.push([]) }
+                return key.get(k)
+            };
+            const edge = (a, b, w, pts, mark = 1) => {
+                pts = pts || [nodes[a], nodes[b]];
+                let L = 0;
+                for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+                edges.push({ a, b, w, pts, mark });
+                adj[a].push({ to: b, L, pts, w });
+                adj[b].push({ to: a, L, pts: pts.slice().reverse(), w })
+            };
+            /* tramo de la retícula; en el centro se corta para dejar espacio a la rotonda; cada tramo de 20 u se divide con un nodo medio (acceso a edificios) */
+            const seg = (x0, y0, x1, y1, w) => {
+                const d = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / d, uy = (y1 - y0) / d;
+                let a = [x0, y0], b = [x1, y1];
+                if (x0 === 50 && y0 === 50) a = [x0 + ux * RR, y0 + uy * RR];
+                if (x1 === 50 && y1 === 50) b = [x1 - ux * RR, y1 - uy * RR];
+                const ia = nd(...a), ib = nd(...b);
+                if (d >= 20) {
+                    const m = nd((a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
+                    edge(ia, m, w); edge(m, ib, w); mids.push({ n: m, ux, uy })
+                } else edge(ia, ib, w)
+            };
+            for (const v of RD) for (let i = 0; i < 6; i++) { seg(LAT[i], v, LAT[i + 1], v, RW(v)); seg(v, LAT[i], v, LAT[i + 1], RW(v)) }
+            /* rotonda central */
+            const ring = [[RR, 0], [0, RR], [-RR, 0], [0, -RR]];
+            ring.forEach((p, i) => {
+                const q = ring[(i + 1) % 4], a0 = Math.atan2(p[1], p[0]), pts = [];
+                for (let s = 0; s <= 8; s++) { const t = a0 + Math.PI / 2 * s / 8; pts.push({ x: 50 + RR * Math.cos(t), y: 50 + RR * Math.sin(t) }) }
+                edge(nd(50 + p[0], 50 + p[1]), nd(50 + q[0], 50 + q[1]), 2.4, pts, 0)
+            });
+            /* avenidas diagonales */
+            const CH = [[1, 1, [30, 10], [10, 30]], [4, 1, [70, 10], [90, 30]], [1, 4, [10, 70], [30, 90]], [4, 4, [90, 70], [70, 90]]];
+            CH.forEach(c => edge(nd(...c[2]), nd(...c[3]), 2.6));
+
+            /* geometría auxiliar */
+            const inPoly = (x, y, p) => { let c = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const a = p[i], b = p[j]; if ((a[1] > y) !== (b[1] > y) && x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0]) c = !c } return c };
+            const dEdge = (x, y, p) => { let m = 1e9; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const a = p[j], b = p[i], dx = b[0] - a[0], dy = b[1] - a[1], t = clamp(((x - a[0]) * dx + (y - a[1]) * dy) / (dx * dx + dy * dy), 0, 1); m = Math.min(m, Math.hypot(x - a[0] - t * dx, y - a[1] - t * dy)) } return m };
+            const cen = p => [p.reduce((s, q) => s + q[0], 0) / p.length, p.reduce((s, q) => s + q[1], 0) / p.length];
+
+            /* manzanas */
+            const BL = [], kindOf = (i, j) => [[3, 0], [5, 3], [2, 5], [0, 2]].some(([a, b]) => a === i && b === j) ? 'depot' : i === 2 && j === 2 ? 'field' : i === 3 && j === 3 ? 'park' : 'res';
+            for (let i = 0; i < 6; i++) for (let j = 0; j < 6; j++) {
+                const x0 = LAT[i], x1 = LAT[i + 1], y0 = LAT[j], y1 = LAT[j + 1], C = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]], ch = CH.find(c => c[0] === i && c[1] === j);
+                if (!ch) { BL.push({ poly: C, kind: kindOf(i, j), i, j }); continue }
+                const p = ch[2], q = ch[3];
+                const cs = C.filter(c => (q[0] - p[0]) * (c[1] - p[1]) - (q[1] - p[1]) * (c[0] - p[0]) !== 0)
+                    .sort((a, b) => Math.hypot(b[0] - 50, b[1] - 50) - Math.hypot(a[0] - 50, a[1] - 50));
+                BL.push({ poly: [p, cs[0], q], kind: 'park', i, j }, { poly: [p, cs[1], q], kind: 'res', i, j })
+            }
+            /* sectores (norte, este, sur, oeste) con paleta propia */
+            const SN = ['Norte', 'Este', 'Sur', 'Oeste'];
+            const sec = (x, y) => { const dx = x - 50, dy = y - 50; return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy < 0 ? 0 : 2) };
+            const ROOF = [['#b5442f', '#c8553d', '#d9783b', '#a0522d'], ['#8e949b', '#a7adb3', '#c8553d', '#6f7780'], ['#d9783b', '#e0944a', '#8c5a3c', '#c8553d'], ['#8c3b2b', '#a84a32', '#7a5a48', '#c0603f']];
+            const LAWN = ['#a8d672', '#bccf7d', '#94d27e', '#a1c975'];
+
+            /* sitios de entrega: hospitales, colegios y barrios junto a una calle */
+            const cand = [];
+            mids.forEach(m => [1, -1].forEach(s => { const n = { x: -m.uy * s, y: m.ux * s }; cand.push({ nd: m.n, n, x: nodes[m.n].x + n.x * 5.4, y: nodes[m.n].y + n.y * 5.4 }) }));
+            for (let i = cand.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [cand[i], cand[j]] = [cand[j], cand[i]] }
+            const SITES = [];
+            for (const c of cand) {
+                if (SITES.length >= 32) break;
+                const b = BL.find(b => inPoly(c.x, c.y, b.poly));
+                if (!b || b.kind !== 'res' || c.x < 4 || c.x > 96 || c.y < 4 || c.y > 96) continue;
+                if (SITES.some(s => Math.hypot(s.x - c.x, s.y - c.y) < 10.5) || DEP.some(d => Math.hypot(d.x - c.x, d.y - c.y) < 9)) continue;
+                SITES.push(c)
+            }
+            const nH = Math.max(2, Math.round(SITES.length * .2)), nS = Math.max(2, Math.round(SITES.length * .28));
+            const SB = { Hospital: [], Colegio: [], Barrio: [] };
+            SITES.forEach((s, i) => {
+                s.tipo = i < nH ? 'Hospital' : i < nH + nS ? 'Colegio' : 'Barrio';
+                s.ang = Math.atan2(s.n.x, -s.n.y); s.sec = sec(s.x, s.y); SB[s.tipo].push(i)
+            });
+
+            /* viviendas y árboles junto a las calles */
+            const HS = [], TR = [];
+            for (const b of BL) {
+                if (b.kind !== 'res') continue;
+                const xs = b.poly.map(p => p[0]), ys = b.poly.map(p => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+                const nx = Math.floor((x1 - x0 - 7) / 5) + 1, ny = Math.floor((y1 - y0 - 7) / 5) + 1;
+                for (let a = 0; a < nx; a++) for (let c = 0; c < ny; c++) {
+                    const cx = x0 + (x1 - x0 - 5 * (nx - 1)) / 2 + a * 5 + (R() - .5) * .8, cy = y0 + (y1 - y0 - 5 * (ny - 1)) / 2 + c * 5 + (R() - .5) * .8;
+                    if (!inPoly(cx, cy, b.poly) || dEdge(cx, cy, b.poly) < 3.3 || SITES.some(s => Math.hypot(s.x - cx, s.y - cy) < 5.6) || R() < .1) continue;
+                    HS.push({ x: cx, y: cy, w: 2.2 + R() * .9, h: 2 + R() * .8, c: pick(ROOF[sec(cx, cy)]), pool: R() < .22 })
+                }
+            }
+            for (const b of BL) {
+                if (b.kind === 'depot') continue;
+                const xs = b.poly.map(p => p[0]), ys = b.poly.map(p => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys), want = b.kind === 'res' ? 7 : 13, ce = cen(b.poly);
+                let n = 0;
+                for (let t = 0; t < 140 && n < want; t++) {
+                    const x = x0 + R() * (x1 - x0), y = y0 + R() * (y1 - y0);
+                    if (!inPoly(x, y, b.poly) || dEdge(x, y, b.poly) < 2 || HS.some(h => Math.hypot(h.x - x, h.y - y) < 2.7) || SITES.some(s => Math.hypot(s.x - x, s.y - y) < 5.8)) continue;
+                    if (b.kind === 'field' && Math.abs(x - 40) < 7 && Math.abs(y - 40) < 7) continue;
+                    if (b.kind === 'park' && Math.hypot(x - ce[0], y - ce[1]) < 4) continue;
+                    TR.push({ x, y, r: .95 + R() * .6, c: pick(['#2e7d32', '#43a047', '#66bb6a', '#388e3c', '#558b2f']) }); n++
+                }
+            }
+
+            /* navegación: Dijkstra desde cada central; las rutas se reconstruyen sobre el grafo */
+            const dijk = s => {
+                const n = nodes.length, D = Array(n).fill(Infinity), P = Array(n).fill(-1), done = Array(n).fill(0);
+                D[s] = 0;
+                for (; ;) {
+                    let u = -1;
+                    for (let i = 0; i < n; i++) if (!done[i] && D[i] < Infinity && (u < 0 || D[i] < D[u])) u = i;
+                    if (u < 0) break;
+                    done[u] = 1;
+                    for (const e of adj[u]) if (D[u] + e.L < D[e.to]) { D[e.to] = D[u] + e.L; P[e.to] = u }
+                }
+                return { D, P }
+            };
+            DEP.forEach(d => d.nd = nd(d.x, d.y));
+            const dij = DEP.map(d => dijk(d.nd));
+            const cache = new Map();
+            const route = (dp, t) => {
+                const k = dp * 999 + t;
+                if (cache.has(k)) return cache.get(k);
+                let out = null;
+                if (isFinite(dij[dp].D[t])) {
+                    const ns = [];
+                    for (let v = t; v >= 0; v = dij[dp].P[v]) ns.push(v);
+                    ns.reverse();
+                    out = [{ x: nodes[ns[0]].x, y: nodes[ns[0]].y }];
+                    for (let i = 1; i < ns.length; i++) out = out.concat(adj[ns[i - 1]].find(e => e.to === ns[i]).pts.slice(1).map(p => ({ x: p.x, y: p.y })))
+                }
+                cache.set(k, out); return out
+            };
+            for (let i = SITES.length - 1; i >= 0; i--) if (!DEP.every((d, j) => isFinite(dij[j].D[SITES[i].nd]))) { console.warn('Sitio sin ruta', i); SITES.splice(i, 1) }
+
+            /* ---- pintado estático (unidades de mundo 0–100) ---- */
+            const poly = (g, p) => { g.beginPath(); p.forEach((q, i) => i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1])); g.closePath() };
+            const circ = (g, x, y, r, f) => { g.fillStyle = f; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill() };
+            function paintBase(g) {
+                g.fillStyle = '#8fbf63'; g.fillRect(0, 0, 100, 100);
+                for (const b of BL) {
+                    const ce = cen(b.poly);
+                    poly(g, b.poly);
+                    g.fillStyle = b.kind === 'depot' ? '#cfd8dc' : b.kind === 'park' ? '#7fc66b' : LAWN[sec(ce[0], ce[1])]; g.fill();
+                    g.save(); g.clip(); g.strokeStyle = '#e3ded0'; g.lineWidth = 4.3; g.stroke(); g.restore();
+                    if (b.kind === 'field') {
+                        g.save(); g.translate(40, 40); g.rotate(Math.PI / 2);
+                        g.fillStyle = '#2e7d32'; g.fillRect(-6.2, -4.2, 12.4, 8.4);
+                        for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? '#43a047' : '#4caf50'; g.fillRect(-5.5 + i * 1.375, -3.5, 1.375, 7) }
+                        g.strokeStyle = '#fff'; g.lineWidth = .14; g.strokeRect(-5.5, -3.5, 11, 7); g.beginPath(); g.moveTo(0, -3.5); g.lineTo(0, 3.5); g.stroke();
+                        g.beginPath(); g.arc(0, 0, 1.2, 0, 7); g.stroke(); g.strokeRect(-5.5, -1.8, 1.8, 3.6); g.strokeRect(3.7, -1.8, 1.8, 3.6);
+                        g.fillStyle = '#fff'; g.fillRect(-5.8, -.6, .3, 1.2); g.fillRect(5.5, -.6, .3, 1.2); g.restore()
+                    }
+                    if (b.kind === 'park') {
+                        g.strokeStyle = '#efe6cf'; g.lineWidth = .8;
+                        b.poly.forEach(p => { g.beginPath(); g.moveTo(ce[0], ce[1]); g.lineTo(ce[0] + (p[0] - ce[0]) * .8, ce[1] + (p[1] - ce[1]) * .8); g.stroke() });
+                        circ(g, ce[0], ce[1], 2.6, '#efe6cf'); circ(g, ce[0], ce[1], 1.8, '#e0f7fa'); circ(g, ce[0], ce[1], 1.1, '#4fc3f7')
+                    }
+                }
+                g.lineCap = 'round'; g.lineJoin = 'round';
+                const tr = e => { g.beginPath(); e.pts.forEach((p, i) => i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)) };
+                for (const e of edges) { tr(e); g.strokeStyle = '#f4f2ea'; g.lineWidth = e.w + .7; g.stroke() }
+                for (const e of edges) { tr(e); g.strokeStyle = '#4a5159'; g.lineWidth = e.w; g.stroke() }
+                circ(g, 50, 50, RR - 1.2, '#6fb35a'); circ(g, 50, 50, 1.3, '#e0f7fa'); circ(g, 50, 50, .8, '#4fc3f7');
+                g.lineCap = 'butt'; g.setLineDash([1.3, 1.1]); g.strokeStyle = '#f3f3f3'; g.lineWidth = .2;
+                for (const e of edges) {
+                    if (!e.mark || e.pts.length !== 2) continue;
+                    const [a, b] = e.pts, d = Math.hypot(b.x - a.x, b.y - a.y), ux = (b.x - a.x) / d, uy = (b.y - a.y) / d;
+                    const ta = adj[e.a].length >= 3 ? e.w / 2 + 1.3 : 0, tb = adj[e.b].length >= 3 ? e.w / 2 + 1.3 : 0;
+                    if (d - ta - tb < 3) continue;
+                    g.beginPath(); g.moveTo(a.x + ux * ta, a.y + uy * ta); g.lineTo(b.x - ux * tb, b.y - uy * tb); g.stroke()
+                }
+                g.setLineDash([]); g.strokeStyle = 'rgba(255,255,255,.92)'; g.lineWidth = .3;
+                nodes.forEach((n, i) => {
+                    if (adj[i].length < 3) return;
+                    for (const e of adj[i]) {
+                        if (e.pts.length !== 2 || e.L < 6) continue;
+                        const b = e.pts[1], d = Math.hypot(b.x - n.x, b.y - n.y), ux = (b.x - n.x) / d, uy = (b.y - n.y) / d, cx = n.x + ux * (e.w / 2 + 1.15), cy = n.y + uy * (e.w / 2 + 1.15);
+                        for (let k = -2; k <= 2; k++) { const o = k * (e.w - .7) / 4; g.beginPath(); g.moveTo(cx - uy * o - ux * .5, cy + ux * o - uy * .5); g.lineTo(cx - uy * o + ux * .5, cy + ux * o + uy * .5); g.stroke() }
+                    }
+                    if (adj[i].length >= 4) for (const [sx, sy] of [[1, 1], [-1, -1]]) { g.fillStyle = '#263238'; g.fillRect(n.x + sx * 2.5 - .3, n.y + sy * 2.5 - .3, .6, .6); circ(g, n.x + sx * 2.5, n.y + sy * 2.5, .17, (i + sx) % 2 ? '#66bb6a' : '#ef5350') }
+                })
+            }
+            function site(g, s) {
+                g.save(); g.translate(s.x, s.y); g.rotate(s.ang);
+                const sh = (x, y, w, h) => { g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(x + .35, y + .45, w, h) };
+                if (s.tipo === 'Hospital') {
+                    sh(-3.5, -2.6, 7, 5.2); g.fillStyle = '#f4f6f8'; g.fillRect(-3.5, -2.6, 7, 5.2); g.fillStyle = '#cfd8dc'; g.fillRect(-3.5, -2.6, 7, .6); g.fillRect(-3.5, 2, 7, .6);
+                    g.fillStyle = '#e53935'; g.fillRect(-.4, -1.5, .8, 3); g.fillRect(-1.5, -.4, 3, .8);
+                    g.strokeStyle = '#90a4ae'; g.lineWidth = .12; g.strokeRect(-3.5, -2.6, 7, 5.2); circ(g, 2.4, -1.1, .7, '#b0bec5'); g.fillStyle = '#fff'; g.fillRect(2.15, -1.3, .5, .4); g.fillStyle = '#e53935'; g.fillRect(-1.2, 2.7, 2.4, .5)
+                } else if (s.tipo === 'Colegio') {
+                    sh(-3.5, -2.6, 7, 5.2); g.fillStyle = '#f2b134'; g.fillRect(-3.5, -2.6, 7, 1.8); g.fillRect(-3.5, -2.6, 1.8, 5.2); g.fillRect(1.7, -2.6, 1.8, 5.2);
+                    g.fillStyle = 'rgba(0,0,0,.14)'; g.fillRect(-3.5, -1.7, 7, .9); g.fillStyle = '#7cb342'; g.fillRect(-1.7, -.8, 3.4, 3.4); g.fillStyle = '#5c9bd5'; g.fillRect(-1, .3, 2, 1.7);
+                    g.strokeStyle = '#fff'; g.lineWidth = .08; g.strokeRect(-1, .3, 2, 1.7); g.beginPath(); g.moveTo(-1, 1.15); g.lineTo(1, 1.15); g.stroke(); g.fillStyle = '#d32f2f'; g.fillRect(-.1, -2.9, .2, .9); g.fillRect(.1, -2.9, .7, .45)
+                } else {
+                    circ(g, 0, 0, 3.6, 'rgba(255,255,255,.35)'); circ(g, 0, 0, 1.4, '#e8dfc8');
+                    [[-2.4, -1.9], [2.4, -1.9], [-2.4, 1.9], [2.4, 1.9]].forEach(([x, y], i) => { sh(x - 1, y - .8, 2, 1.6); g.fillStyle = ROOF[s.sec][i]; g.fillRect(x - 1, y - .8, 2, 1.6); g.fillStyle = 'rgba(255,255,255,.2)'; g.fillRect(x - 1, y - .1, 2, .2) });
+                    circ(g, 0, 0, .95, '#29b6f6'); circ(g, -.3, -.3, .35, '#b3e5fc')
+                }
+                g.restore()
+            }
+            function paintBld(g) {
+                for (const h of HS) {
+                    g.fillStyle = 'rgba(0,0,0,.2)'; g.fillRect(h.x - h.w / 2 + .35, h.y - h.h / 2 + .45, h.w, h.h);
+                    if (h.pool) { g.fillStyle = '#e6f6f8'; g.fillRect(h.x + h.w / 2 + .15, h.y - .5, 1.2, 1); g.fillStyle = '#3ddbd9'; g.fillRect(h.x + h.w / 2 + .25, h.y - .4, 1, .8) }
+                    g.fillStyle = h.c; g.fillRect(h.x - h.w / 2, h.y - h.h / 2, h.w, h.h);
+                    g.fillStyle = 'rgba(255,255,255,.22)'; g.fillRect(h.x - h.w / 2, h.y - .12, h.w, .24);
+                    g.fillStyle = 'rgba(0,0,0,.14)'; g.fillRect(h.x - h.w / 2, h.y + .12, h.w, h.h / 2 - .12);
+                    g.fillStyle = '#bfe3f5'; g.fillRect(h.x + h.w / 4 - .2, h.y - h.h / 4 - .2, .4, .4);
+                    g.fillStyle = '#4e342e'; g.fillRect(h.x - .25, h.y + h.h / 2 - .05, .5, .35)
+                }
+                for (const t of TR) { circ(g, t.x + .4, t.y + .5, t.r, 'rgba(0,0,0,.18)'); circ(g, t.x, t.y, t.r, t.c); circ(g, t.x - t.r * .3, t.y - t.r * .3, t.r * .45, 'rgba(255,255,255,.16)') }
+                SITES.forEach(s => site(g, s))
+            }
+            return { nodes, edges, SITES, SB, dij, route, SN, sec, paintBase, paintBld }
+        })();
+
+        /* ---------- Motor de simulación (compartido por modo visual y benchmark) ---------- */
+        /* distancia por carretera: grafo vial (Dijkstra) + patio de maniobra de la central */
+        const APP = 3, rd = (d, r) => (CITY.dij[d].D[r.nd] + APP) * KM;
+        const mk = N => {
+            const c = [0, 0, 0, 0];
+            return {
+                t: 0, nid: 1, km: 0, reqs: [],
+                trucks: Array.from({ length: N }, (_, i) => ({ id: i + 1, dep: i % 4, slot: c[i % 4]++, busy: 0, tot: 0, out: 0, req: null, pp: null }))
+            }
+        };
 
         function add(S, o) {
-            const r = {
-                id: S.nid++,
-                tipo: o.tipo,
-                base: TY[o.tipo],
-                pob: o.pob,
-                d0: o.d0,
-                x: o.x,
-                y: o.y,
-                at: S.t,
-                wait: 0,
-                st: 'En Espera',
-                end: null,
-                assignedDepot: null,
-                assignedTruckId: null
+            const s = CITY.SITES[o.si], r = {
+                id: S.nid++, tipo: o.tipo, base: TY[o.tipo], pob: o.pob, d0: o.d0,
+                si: o.si, x: s.x, y: s.y, nd: s.nd, at: S.t, wait: 0, st: 'En Espera', end: null
             };
-            r.dist = Math.min(...DEP.map(d => km(d, r)));
+            const ds = DEP.map((d, i) => rd(i, r));
+            r.dist = Math.min(...ds);
+            r.near = ds.indexOf(r.dist);
             S.reqs.push(r);
             return r
         }
 
         function spec(R) {
-            const u = R();
-            let x, y;
-            do {
-                x = 12 + R() * 76;
-                y = 12 + R() * 76
-            } while (DEP.some(d => Math.hypot(d.x - x, d.y - y) < 10));
+            const u = R(), tipo = u < .1 ? 'Hospital' : u < .35 ? 'Colegio' : 'Barrio', l = CITY.SB[tipo];
             return {
-                tipo: u < .1 ? 'Hospital' : u < .35 ? 'Colegio' : 'Barrio',
+                tipo,
                 pob: 50 + Math.floor(R() * 951),
                 d0: 1 + Math.floor(R() * 7),
-                x,
-                y
+                si: l[Math.floor(R() * l.length)]
             }
         }
 
@@ -671,34 +843,34 @@
             return q.map(r => (r.u = score(r, w), r)).sort((x, y) => y.u - x.u || x.id - y.id)
         }
 
+        /* Ciclo de una cisterna: ida (out turnos) · descarga (1 turno) · vuelta (out turnos) */
         function dispatch(S, a, w) {
             const q = S.reqs.filter(r => r.st === 'En Espera');
             if (!q.length) return;
             for (const r of order(a, q, w)) {
                 let best = null,
-                    bd = 1e9,
-                    bestRoute = null;
+                    bd = 1e9;
                 for (const k of S.trucks)
                     if (!k.busy) {
-                        const depot = DEP[k.dep];
-                        const route = findStreetRoute(depot, r);
-                        const routeDist = calculateRouteDistance(route);
-                        if (routeDist < bd) {
-                            bd = routeDist;
-                            best = k;
-                            bestRoute = route;
+                        const d = rd(k.dep, r);
+                        if (d < bd) {
+                            bd = d;
+                            best = k
                         }
                     }
-                if (!best) break;
+                if (!best) {
+                    if (S.trucks.some(k => !k.busy)) continue; /* destino sin ruta válida: se omite sin bloquear la cola */
+                    break
+                }
                 best.req = r;
-                best.route = bestRoute;
-                best.routeDist = bd;
-                best.out = Math.max(1, Math.ceil(bd / (SPD * KM * 3)));
-                best.tot = 2 * best.out;
+                best.pp = null;
+                best.out = Math.max(1, Math.ceil(bd / SPD));
+                best.tot = 2 * best.out + 1;
                 best.busy = best.tot;
                 r.st = 'En Ruta';
-                r.assignedDepot = DEP[best.dep].n;
-                r.assignedTruckId = best.id;
+                r.tk = best;
+                r.dp = best.dep;
+                r.km = bd;
                 S.km += 2 * bd
             }
         }
@@ -708,15 +880,16 @@
             for (const k of S.trucks)
                 if (k.busy) {
                     k.busy--;
-                    if (k.req && k.tot - k.busy === k.out) {
-                        k.req.st = 'Abastecido';
-                        k.req.end = S.t;
-                        k.req.wait = S.t - k.req.at
+                    const e = k.tot - k.busy;
+                    if (k.req) {
+                        if (e === k.out) k.req.st = 'Abasteciendo';
+                        else if (e === k.out + 1) {
+                            k.req.st = 'Abastecido';
+                            k.req.end = S.t;
+                            k.req.wait = S.t - k.req.at
+                        }
                     }
-                    if (!k.busy) {
-                        k.req = null;
-                        k.route = [];
-                    }
+                    if (!k.busy) k.req = null
                 }
             for (const r of S.reqs)
                 if (r.st !== 'Abastecido') r.wait = S.t - r.at;
@@ -740,20 +913,10 @@
             }
         }
 
-        /* ---------- Estado visual, Zoom y Transformaciones ---------- */
+        /* ---------- Estado visual y paneles ---------- */
         let S, playing = false,
             acc = 0,
             last = 0;
-        
-        let viewState = {
-            scale: 1,
-            offsetX: 0,
-            offsetY: 0,
-            isDragging: false,
-            startX: 0,
-            startY: 0
-        };
-
         const tickMs = () => 1000 / +$('#sp').value;
 
         function reset() {
@@ -773,7 +936,7 @@
             panels()
         }
 
-        function panels() {
+        function panels0() {
             const a = $('#ag').value,
                 w = W(),
                 q = S.reqs.filter(r => r.st === 'En Espera'),
@@ -786,328 +949,289 @@
             if (a === 'util') $('#wu').innerHTML = lim(o, r => `<tr><td>#${r.id}</td><td>${r.base}</td><td>${r.pob}</td><td>${f(r)}</td><td>${r.dist.toFixed(1)}</td><td class="best">${r.u.toFixed(1)}</td></tr>`);
             const c = s => S.reqs.filter(r => r.st === s),
                 done = c('Abastecido');
-            $('#kpis').innerHTML = `<span>Turno <b>${S.t}</b></span><span>En espera <b>${q.length}</b></span><span>En ruta <b>${c('En Ruta').length}</b></span><span>Abastecidos <b>${done.length}</b></span><span>Personas <b>${done.reduce((s, r) => s + r.pob, 0)}</b></span><span>Km <b>${S.km.toFixed(1)}</b></span>`
+            $('#kpis').innerHTML = `<span>Turno <b>${S.t}</b></span><span>En espera <b>${q.length}</b></span><span>En ruta <b>${c('En Ruta').length}</b></span><span>Abasteciendo <b>${c('Abasteciendo').length}</b></span><span>Abastecidos <b>${done.length}</b></span><span>Personas <b>${done.reduce((s, r) => s + r.pob, 0)}</b></span><span>Km <b>${S.km.toFixed(1)}</b></span>`
         }
 
-        /* ---------- Renderizado Gráfico Diurno Estilo Imagen de Referencia ---------- */
+        /* ---------- Render: capas, cámara, camiones, solicitudes e interacción ---------- */
+        const V = { z: 1, cx: 50, cy: 50 }, LY = { b: $('#tb'), r: $('#tr'), t: $('#tt'), c: $('#tc') };
+        const TC = ['#2563eb', '#9333ea', '#0d9488', '#ea580c'];
+        let sel = null, hits = [], dpr = 1, al = 0, drag = null, lastInfo = 0, infoTxt = '';
+        const lay = [0, 1].map(() => document.createElement('canvas'));
+        (() => {
+            const SZ = 2048, k = SZ / 100;
+            lay.forEach(c => c.width = c.height = SZ);
+            let c = lay[0].getContext('2d'); c.scale(k, k); CITY.paintBase(c);
+            c = lay[1].getContext('2d'); c.scale(k, k); CITY.paintBld(c)
+        })();
+
+        const SC = () => Math.min(cv.width, cv.height) / 100 * V.z;
+        function clampV() {
+            const s = SC(), hx = cv.width / (2 * s), hy = cv.height / (2 * s);
+            V.cx = hx >= 50 ? 50 : clamp(V.cx, hx, 100 - hx);
+            V.cy = hy >= 50 ? 50 : clamp(V.cy, hy, 100 - hy)
+        }
         function fit() {
-            const d = devicePixelRatio || 1;
-            cv.width = cv.clientWidth * d;
-            cv.height = cv.clientHeight * d;
+            dpr = devicePixelRatio || 1;
+            const w = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
+            if (w && (cv.width !== w || cv.height !== h)) { cv.width = w; cv.height = h; clampV() }
         }
         addEventListener('resize', fit);
+        if (window.ResizeObserver) new ResizeObserver(fit).observe(cv);
 
-        // Helper para dibujar un árbol
-        function drawTree(cx, cy, r) {
-            g.fillStyle = 'rgba(0,0,0,0.15)';
-            g.beginPath();
-            g.arc(cx + r * 0.2, cy + r * 0.2, r, 0, Math.PI * 2);
-            g.fill();
-
-            g.fillStyle = '#417a29';
-            g.beginPath();
-            g.arc(cx, cy, r, 0, Math.PI * 2);
-            g.fill();
-
-            g.fillStyle = '#5c9e3b';
-            g.beginPath();
-            g.arc(cx - r * 0.2, cy - r * 0.2, r * 0.65, 0, Math.PI * 2);
-            g.fill();
+        /* ---- rutas de camión: bahía de la central → calle → destino ---- */
+        const rot = (d, x, y) => { for (let i = 0; i < d; i++)[x, y] = [100 - y, x]; return { x, y } };
+        const nrm = a => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a };
+        const bayX = k => 53.1 + k.slot * 2, parkH = d => -Math.PI / 2 + d * Math.PI / 2;
+        function mkPath(k) {
+            const r = k.req, rt = CITY.route(k.dep, r.nd);
+            if (!rt) return null;
+            const pts = [rot(k.dep, bayX(k), 6.2), rot(k.dep, bayX(k), 9.2), ...rt];
+            if (pts.length > 3) { const a = pts[1], b = pts[2], c = pts[3]; if ((b.x - a.x) * (c.x - b.x) + (b.y - a.y) * (c.y - b.y) < 0) pts.splice(2, 1) }
+            const cum = [0];
+            for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
+            return { req: r, pts, cum, len: cum[cum.length - 1] }
         }
+        const ensure = k => { if (k.req && (!k.pp || k.pp.req !== k.req)) k.pp = mkPath(k) };
+        function at(pp, s) {
+            s = clamp(s, 0, pp.len);
+            let i = 1;
+            while (i < pp.cum.length - 1 && pp.cum[i] < s) i++;
+            const t = (s - pp.cum[i - 1]) / ((pp.cum[i] - pp.cum[i - 1]) || 1), a = pp.pts[i - 1], b = pp.pts[i];
+            return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }
+        }
+        function pose(pp, s, dir, hp) {
+            const d = 1.4, pf = at(pp, s + dir * d), pb = at(pp, s - dir * d), pm = at(pp, s);
+            let h = Math.atan2(pf.y - pb.y, pf.x - pb.x);
+            if (s < 3) { const u = s / 3, t = u * u * (3 - 2 * u); h = hp + nrm(h - hp) * t }
+            let x = (pf.x + pm.x + pb.x) / 3, y = (pf.y + pm.y + pb.y) / 3;
+            const off = .45 * Math.min(1, s / 4, (pp.len - s) / 4);
+            return { x: x - Math.sin(h) * off, y: y + Math.cos(h) * off, h }
+        }
+        /* posición real de un camión a partir del progreso de la simulación */
+        function truckPose(k) {
+            ensure(k);
+            const hp = parkH(k.dep);
+            if (!k.req || !k.pp) { const p = rot(k.dep, bayX(k), 6.2); return { x: p.x, y: p.y, h: hp, st: 'Disponible' } }
+            const pp = k.pp, e = Math.min(k.tot, k.tot - k.busy + al);
+            if (e <= k.out) return { ...pose(pp, pp.len * e / k.out, 1, hp), st: 'En ruta' };
+            if (e <= k.out + 1) {
+                const p = pose(pp, pp.len, 1, hp), u = clamp((e - k.out - .35) / .55, 0, 1), t = u * u * (3 - 2 * u);
+                return { ...p, h: p.h + Math.PI * t, st: 'Abasteciendo' }
+            }
+            return { ...pose(pp, pp.len * (1 - (e - k.out - 1) / k.out), -1, hp), st: 'Regresando' }
+        }
+        const stTxt = k => !k.busy ? 'Disponible' : (e => e < k.out ? 'En ruta' : e === k.out ? 'Abasteciendo' : 'Regresando')(k.tot - k.busy);
+
+        /* ---- dibujo de elementos ---- */
+        function drawDepot(i) {
+            g.save(); g.translate(50, 50); g.rotate(i * Math.PI / 2); g.translate(-50, -50);
+            g.fillStyle = '#cfd8dc'; g.fillRect(52, .4, 16.8, 8); g.strokeStyle = '#607d8b'; g.lineWidth = .22; g.strokeRect(52, .4, 16.8, 8);
+            g.fillStyle = TC[i]; g.fillRect(52, .4, 16.8, .55);
+            g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(52.85, 1.75, 2.6, 2.6); g.fillStyle = '#455a64'; g.fillRect(52.5, 1.4, 2.6, 2.6); g.fillStyle = '#90a4ae'; g.fillRect(52.5, 1.4, 2.6, .5);
+            g.strokeStyle = '#546e7a'; g.lineWidth = .25; g.beginPath(); g.moveTo(57.6, 4.45); g.lineTo(66.9, 4.45); g.stroke();
+            for (let t = 0; t < 4; t++) {
+                const cx = 57.6 + t * 3.1, cy = 2.7;
+                g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.arc(cx + .3, cy + .35, 1.5, 0, 7); g.fill();
+                const gr = g.createRadialGradient(cx - .5, cy - .5, .2, cx, cy, 1.5); gr.addColorStop(0, '#e1f5fe'); gr.addColorStop(1, '#4aa3d6');
+                g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, 1.45, 0, 7); g.fill(); g.strokeStyle = '#1e6a96'; g.lineWidth = .12; g.stroke();
+                g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = .08; g.beginPath(); g.arc(cx, cy, .8, 0, 7); g.stroke()
+            }
+            g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = .1;
+            for (let s = 0; s < 8; s++) g.strokeRect(53.1 + s * 2 - .9, 4.5, 1.8, 3.5);
+            g.restore()
+        }
+        function drawTruck(x, y, h, col, beacon) {
+            g.save(); g.translate(x, y); g.rotate(h);
+            g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(-1.6, -.45, 3.4, 1.5);
+            g.fillStyle = '#111'; for (const wx of [-1.1, 0, 1.2]) { g.fillRect(wx - .3, -.88, .6, .26); g.fillRect(wx - .3, .62, .6, .26) }
+            g.fillStyle = '#37474f'; g.fillRect(-1.7, -.62, 3.4, 1.24);
+            const gr = g.createLinearGradient(0, -.72, 0, .72); gr.addColorStop(0, '#5fb3d9'); gr.addColorStop(.35, '#d5f1fb'); gr.addColorStop(1, '#4c9fc8');
+            g.fillStyle = gr; g.beginPath(); g.roundRect(-1.65, -.72, 2.45, 1.44, .5); g.fill();
+            g.strokeStyle = 'rgba(20,70,100,.55)'; g.lineWidth = .07;
+            for (const bx of [-.9, -.1]) { g.beginPath(); g.moveTo(bx, -.7); g.lineTo(bx, .7); g.stroke() }
+            g.fillStyle = '#2b6f94'; g.fillRect(-.7, -.2, .5, .4);
+            g.fillStyle = col; g.beginPath(); g.roundRect(.85, -.7, .85, 1.4, .18); g.fill();
+            g.fillStyle = '#bfe9ff'; g.fillRect(1.32, -.5, .25, 1); g.fillStyle = 'rgba(255,255,255,.25)'; g.fillRect(.9, -.65, .3, 1.3);
+            if (beacon) { g.fillStyle = beacon; g.beginPath(); g.arc(1.05, 0, .14, 0, 7); g.fill() }
+            g.restore()
+        }
+        const hit = (x, y, r, p, ref, tip) => hits.push({ x, y, r, p, ref, tip });
+        function chip(x, y, txt, bg, u, alt) {
+            g.font = `600 ${11 * u}px "Segoe UI",system-ui,sans-serif`;
+            const w = g.measureText(txt).width + 10 * u, h = 17 * u;
+            if (x + w > cv.width - 2 * u) x = alt != null ? alt - w : cv.width - 2 * u - w;
+            g.fillStyle = bg; g.beginPath(); g.roundRect(x, y - h / 2, w, h, 5 * u); g.fill();
+            g.fillStyle = '#fff'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText(txt, x + 5 * u, y + .5 * u); return w
+        }
+        const urg = r => { const e = ed(r); return e < 2.5 ? ['Baja', '#84cc16'] : e < 4.5 ? ['Media', '#facc15'] : ['Crítica', '#ef4444'] };
 
         function draw(ts) {
-            const w = cv.width,
-                h = cv.height,
-                al = Math.min(1, acc / tickMs());
-
-            g.save();
-            g.clearRect(0, 0, w, h);
-
-            // Transformaciones
-            g.translate(w / 2 + viewState.offsetX, h / 2 + viewState.offsetY);
-            g.scale(viewState.scale, viewState.scale);
-            g.translate(-w / 2, -h / 2);
-
-            const baseDim = Math.min(w, h);
-            const mapSize = baseDim * 0.92;
-            const mapX = (w - mapSize) / 2;
-            const mapY = (h - mapSize) / 2;
-
-            const X = x => mapX + (x / 100) * mapSize;
-            const Y = y => mapY + (y / 100) * mapSize;
-            const sz = v => (v / 100) * mapSize;
-
-            // 1. Fondo de césped urbano verde claro
-            g.fillStyle = '#78b159';
-            g.fillRect(mapX, mapY, mapSize, mapSize);
-
-            // 2. Dibujar Manzanas Urbanas con viviendas, piscinas, canchas y parques (exacto a la imagen)
-            blocks.forEach(b => {
-                const bx = X(b.x);
-                const by = Y(b.y);
-                const bw = sz(b.w);
-                const bh = sz(b.h);
-
-                // Área verde/vereda de la manzana
-                g.fillStyle = '#83bd63';
-                g.beginPath();
-                g.roundRect(bx, by, bw, bh, 6);
-                g.fill();
-
-                // Detalle del borde de vereda/acera
-                g.strokeStyle = '#d0e0c0';
-                g.lineWidth = sz(0.4);
-                g.stroke();
-
-                // Elementos especiales dentro de manzanas
-                if (b.feature === 'pool') {
-                    // Piscina con sombrilla
-                    g.fillStyle = '#48cae4';
-                    g.beginPath();
-                    g.roundRect(bx + bw * 0.55, by + bh * 0.15, bw * 0.35, bh * 0.4, 4);
-                    g.fill();
-                    g.strokeStyle = '#ffffff';
-                    g.lineWidth = 1.5;
-                    g.stroke();
-                } else if (b.feature === 'sports') {
-                    // Cancha de fútbol verde
-                    g.fillStyle = '#55a630';
-                    g.fillRect(bx + bw * 0.1, by + bh * 0.1, bw * 0.8, bh * 0.8);
-                    g.strokeStyle = '#ffffff';
-                    g.lineWidth = 1.5;
-                    g.strokeRect(bx + bw * 0.1, by + bh * 0.1, bw * 0.8, bh * 0.8);
-                    // Línea central de la cancha
-                    g.beginPath();
-                    g.moveTo(bx + bw * 0.5, by + bh * 0.1);
-                    g.lineTo(bx + bw * 0.5, by + bh * 0.9);
-                    g.arc(bx + bw * 0.5, by + bh * 0.5, sz(1.2), 0, Math.PI * 2);
-                    g.stroke();
-                }
-
-                // Dibujar viviendas residenciales con sombra y techos
-                b.houses.forEach(h => {
-                    const hx = bx + h.rw * bw * h.rx * 2;
-                    const hy = by + h.rh * bh * h.ry * 2;
-                    const hw = bw * h.rw;
-                    const hh = bh * h.rh;
-
-                    // Sombra de vivienda
-                    g.fillStyle = 'rgba(0,0,0,0.18)';
-                    g.fillRect(hx + 3, hy + 3, hw, hh);
-
-                    // Techo principal
-                    g.fillStyle = h.color;
-                    g.fillRect(hx, hy, hw, hh);
-
-                    // Líneas de cresta del techo
-                    g.strokeStyle = 'rgba(255,255,255,0.3)';
-                    g.lineWidth = 1;
-                    g.beginPath();
-                    g.moveTo(hx, hy);
-                    g.lineTo(hx + hw, hy + hh);
-                    g.moveTo(hx + hw, hy);
-                    g.lineTo(hx, hy + hh);
-                    g.stroke();
-                });
-
-                // Vegetación/árboles en las esquinas de las manzanas
-                drawTree(bx + bw * 0.15, by + bh * 0.85, sz(1.1));
-                drawTree(bx + bw * 0.85, by + bh * 0.85, sz(1.1));
-            });
-
-            // 3. Red de Calles y Avenidas de Asfalto Gris Oscuro con Pasos Peatonales
-            const roadWidth = sz(2.8);
-            g.strokeStyle = '#3a4146'; // Asfalto gris oscuro
-            g.lineWidth = roadWidth;
-            g.lineCap = 'butt';
-            g.lineJoin = 'miter';
-
-            edges.forEach(e => {
-                const n1 = nodes[e.from];
-                const n2 = nodes[e.to];
-                g.beginPath();
-                g.moveTo(X(n1.x), Y(n1.y));
-                g.lineTo(X(n2.x), Y(n2.y));
-                g.stroke();
-            });
-
-            // Líneas blancas discontinuas al centro de las calles
-            g.strokeStyle = '#ffffff';
-            g.lineWidth = sz(0.3);
-            g.setLineDash([sz(1.2), sz(1.2)]);
-            edges.forEach(e => {
-                const n1 = nodes[e.from];
-                const n2 = nodes[e.to];
-                g.beginPath();
-                g.moveTo(X(n1.x), Y(n1.y));
-                g.lineTo(X(n2.x), Y(n2.y));
-                g.stroke();
-            });
+            const w = cv.width, h = cv.height, u = dpr, sc = SC(), pulse = .5 + .5 * Math.sin(ts / 220);
+            clampV();
+            al = playing ? Math.min(1, acc / tickMs()) : 0;
+            const tx = w / 2 - V.cx * sc, ty = h / 2 - V.cy * sc, X = x => x * sc + tx, Y = y => y * sc + ty;
+            g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#0b1b27'; g.fillRect(0, 0, w, h);
+            g.setTransform(sc, 0, 0, sc, tx, ty); g.imageSmoothingQuality = 'high';
+            g.drawImage(lay[0], 0, 0, 100, 100);
+            if (LY.b.checked) g.drawImage(lay[1], 0, 0, 100, 100);
+            hits = [];
+            const act = S.reqs.filter(r => r.st !== 'Abastecido' || S.t - r.end <= 5), selK = selTruck();
+            if (LY.c.checked) DEP.forEach((d, i) => drawDepot(i));
+            /* rutas activas */
+            g.lineCap = 'round'; g.lineJoin = 'round';
+            const trace = pts => { g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)); g.stroke() };
+            for (const k of S.trucks) {
+                if (!k.req) continue; ensure(k);
+                if (!k.pp || k === selK) continue;
+                if (LY.t.checked) { g.setLineDash([]); g.strokeStyle = 'rgba(8,47,73,.5)'; g.lineWidth = .95; trace(k.pp.pts); g.setLineDash([1.3, 1]); g.strokeStyle = '#38bdf8'; g.lineWidth = .5; trace(k.pp.pts) }
+            }
+            if (selK && selK.pp) {
+                g.setLineDash([]); g.strokeStyle = 'rgba(0,0,0,.5)'; g.lineWidth = 1.5; trace(selK.pp.pts);
+                g.setLineDash([1.6, 1.2]); g.lineDashOffset = -ts / 70; g.strokeStyle = '#ffee58'; g.lineWidth = .8; trace(selK.pp.pts); g.lineDashOffset = 0
+            }
             g.setLineDash([]);
-
-            // Intersecciones y Pasos de Cebra (Zebra Crossings)
-            nodes.forEach(n => {
-                const nx = X(n.x);
-                const ny = Y(n.y);
-                g.fillStyle = '#3a4146';
-                g.fillRect(nx - roadWidth / 2, ny - roadWidth / 2, roadWidth, roadWidth);
-
-                // Rayas de paso peatonal
-                g.fillStyle = '#ffffff';
-                const stripeW = roadWidth / 5;
-                for (let i = 0; i < 5; i += 2) {
-                    g.fillRect(nx - roadWidth / 2 + i * stripeW, ny - roadWidth / 2, stripeW, roadWidth / 4);
-                    g.fillRect(nx - roadWidth / 2 + i * stripeW, ny + roadWidth / 4, stripeW, roadWidth / 4);
-                }
+            /* contornos de los destinos activos */
+            if (LY.r.checked) for (const r of act) {
+                const s = CITY.SITES[r.si], c = r.st === 'Abastecido' ? '#22c55e' : r.st === 'Abasteciendo' ? '#38bdf8' : urg(r)[1], crit = r.st === 'En Espera' && ed(r) >= 4.5, isSel = sel && sel.t === 'r' && sel.id === r.id;
+                g.save(); g.translate(s.x, s.y); g.rotate(s.ang);
+                g.globalAlpha = r.st === 'Abastecido' ? Math.max(.3, 1 - (S.t - r.end) / 6) : crit ? .45 + .55 * pulse : 1;
+                g.strokeStyle = isSel ? '#fff' : c; g.lineWidth = isSel ? .5 : .35; g.setLineDash(r.st === 'En Espera' ? [.9, .6] : []);
+                g.beginPath(); g.roundRect(-4.4, -3.5, 8.8, 7, .8); g.stroke(); g.restore()
+            }
+            g.setLineDash([]); g.globalAlpha = 1;
+            /* descarga */
+            for (const k of S.trucks) if (k.req && stTxt(k) === 'Abasteciendo') {
+                const P = truckPose(k), s = CITY.SITES[k.req.si], dx = s.x - P.x, dy = s.y - P.y;
+                g.strokeStyle = 'rgba(41,182,246,.9)'; g.lineWidth = .5; g.setLineDash([.7, .7]); g.lineDashOffset = -ts / 50;
+                g.beginPath(); g.moveTo(P.x, P.y); g.lineTo(s.x, s.y); g.stroke(); g.setLineDash([]); g.lineDashOffset = 0;
+                for (let i = 0; i < 4; i++) { const t = (ts / 450 + i / 4) % 1; g.fillStyle = '#e1f5fe'; g.beginPath(); g.arc(P.x + dx * t, P.y + dy * t, .32, 0, 7); g.fill() }
+                const rp = (ts / 700) % 1; g.strokeStyle = `rgba(79,195,247,${1 - rp})`; g.lineWidth = .25; g.beginPath(); g.arc(s.x, s.y, 1 + rp * 4, 0, 7); g.stroke()
+            }
+            /* camiones */
+            const tp = [];
+            S.trucks.forEach((k, i) => {
+                const P = truckPose(k); tp.push(P);
+                const isSel = sel && sel.t === 'k' && sel.i === i, bc = P.st === 'En ruta' ? (Math.sin(ts / 120) > 0 ? '#ffca28' : '#fff') : null;
+                if (isSel) { g.strokeStyle = '#ffee58'; g.lineWidth = .35; g.beginPath(); g.arc(P.x, P.y, 2.6, 0, 7); g.stroke() }
+                drawTruck(P.x, P.y, P.h, TC[k.dep], bc);
+                hit(X(P.x), Y(P.y), 14 * u, 3, { t: 'k', i }, `Cisterna C${k.id} · ${DEP[k.dep].n} · ${P.st}`)
             });
-
-            // 4. Rutas destacadas de camiones en tránsito
-            for (const k of S.trucks) {
-                if (k.busy && k.route && k.route.length > 1) {
-                    g.strokeStyle = 'rgba(56, 189, 248, 0.7)';
-                    g.lineWidth = sz(0.8);
-                    g.beginPath();
-                    g.moveTo(X(k.route[0].x), Y(k.route[0].y));
-                    for (let i = 1; i < k.route.length; i++) {
-                        g.lineTo(X(k.route[i].x), Y(k.route[i].y));
+            /* superposición en pantalla */
+            g.setTransform(1, 0, 0, 1, 0, 0);
+            if (LY.c.checked) DEP.forEach((d, i) => {
+                const p = rot(i, 60.4, 4.4), idle = S.trucks.filter(k => k.dep === i && !k.busy).length, tot = S.trucks.filter(k => k.dep === i).length;
+                const sy = Y(p.y), t = `Central ${d.n} · ${idle}/${tot}`;
+                g.font = `600 ${11 * u}px "Segoe UI",system-ui,sans-serif`; const cw = g.measureText(t).width + 10 * u, sx = clamp(X(p.x), cw / 2 + 6 * u, w - cw / 2 - 6 * u);
+                g.fillStyle = TC[i]; g.beginPath(); g.roundRect(sx - cw / 2 - 3 * u, sy - 8.5 * u, cw + 6 * u, 17 * u, 5 * u); g.fill(); chip(sx - cw / 2, sy, t, 'rgba(7,19,28,.9)', u);
+                hit(sx, sy, 26 * u, 0, { t: 'd', i }, `Central ${d.n}: ${idle} de ${tot} cisternas disponibles`)
+            });
+            S.trucks.forEach((k, i) => {
+                if (!((k.busy && V.z > 1.35) || V.z > 2.4 || (sel && sel.t === 'k' && sel.i === i))) return;
+                const P = tp[i];
+                chip(X(P.x) - 12 * u, Y(P.y) - 17 * u, 'C' + k.id, 'rgba(7,19,28,.85)', u)
+            });
+            if (LY.r.checked) {
+                const cnt = {};
+                for (const r of act) {
+                    const s = CITY.SITES[r.si], n = cnt[r.si] = (cnt[r.si] + 1) || 0, px = X(s.x), py = Y(s.y) - (22 + n * 27) * u, [pl, col0] = urg(r);
+                    const done = r.st === 'Abastecido', ab = r.st === 'Abasteciendo', crit = r.st === 'En Espera' && pl === 'Crítica', isSel = sel && sel.t === 'r' && sel.id === r.id;
+                    const col = done ? '#22c55e' : ab ? '#38bdf8' : col0;
+                    g.globalAlpha = done ? Math.max(.3, 1 - (S.t - r.end) / 6) : 1;
+                    if (crit) { g.strokeStyle = `rgba(239,68,68,${.85 - .6 * pulse})`; g.lineWidth = 3 * u; g.beginPath(); g.arc(px, py, (14 + 9 * pulse) * u, 0, 7); g.stroke() }
+                    g.fillStyle = col; g.beginPath(); g.moveTo(px - 6 * u, py + 8 * u); g.lineTo(px, py + 17 * u); g.lineTo(px + 6 * u, py + 8 * u); g.fill();
+                    g.fillStyle = col; g.strokeStyle = isSel ? '#ffee58' : '#fff'; g.lineWidth = (isSel || r.st === 'En Ruta' ? 3 : 2) * u;
+                    g.beginPath(); g.arc(px, py, 11 * u, 0, 7); g.fill(); g.stroke();
+                    g.fillStyle = col === '#facc15' || col === '#84cc16' ? '#1b2a1b' : '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+                    if (done) { g.font = `700 ${13 * u}px sans-serif`; g.fillText('✓', px, py + u) }
+                    else if (r.tipo === 'Hospital') { g.fillRect(px - 1.8 * u, py - 6 * u, 3.6 * u, 12 * u); g.fillRect(px - 6 * u, py - 1.8 * u, 12 * u, 3.6 * u) }
+                    else { g.font = `700 ${12 * u}px sans-serif`; g.fillText(r.tipo[0], px, py + u) }
+                    if (ab) {
+                        const k = r.tk, e = clamp(k.tot - k.busy + al - k.out, 0, 1);
+                        g.strokeStyle = '#fff'; g.lineWidth = 3 * u; g.beginPath(); g.arc(px, py, 15 * u, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * e); g.stroke()
                     }
-                    g.stroke();
+                    const more = V.z > 1.5 || isSel;
+                    const t = `#${r.id}` + (crit ? ' ¡CRÍTICA!' : '') + (r.st === 'En Ruta' && r.tk ? ` → C${r.tk.id}` : '') + (more ? ` · ${r.st === 'En Espera' ? 'en espera' : r.st.toLowerCase()}` : '');
+                    chip(px + 14 * u, py, t, crit ? '#b91c1c' : 'rgba(7,19,28,.88)', u, px - 14 * u);
+                    g.globalAlpha = 1;
+                    hit(px, py, 15 * u, 2, { t: 'r', id: r.id }, `#${r.id} ${r.tipo} · ${r.st} · ${r.pob} pers. · prioridad ${pl.toLowerCase()}`);
+                    hit(X(s.x), Y(s.y), 4 * sc, 1, { t: 'r', id: r.id }, `#${r.id} ${r.tipo} · ${r.st}`)
                 }
             }
-
-            // 5. Puntos de Solicitudes Atendidas o Pendientes (Hospitales, Colegios, Barrios)
-            const pulse = .5 + .5 * Math.sin(ts / 180);
-            for (const r of S.reqs) {
-                if (r.st === 'Abastecido' && S.t - r.end > 5) continue;
-                const e = ed(r),
-                    done = r.st === 'Abastecido',
-                    rad = sz(2.4);
-                
-                const col = done ? '#22c55e' : e < 2.5 ? '#84cc16' : e < 4.5 ? '#facc15' : '#ef4444';
-                g.globalAlpha = done ? Math.max(.3, 1 - (S.t - r.end) / 6) : 1;
-
-                // Anillo de alerta roja parpadeante
-                if (!done && e >= 4.5) {
-                    g.fillStyle = `rgba(239, 68, 68, ${.25 + .35 * pulse})`;
-                    g.beginPath();
-                    g.arc(X(r.x), Y(r.y), rad + sz(1.6 + pulse), 0, Math.PI * 2);
-                    g.fill();
-                }
-
-                // Círculo base con borde blanco nítido
-                g.fillStyle = col;
-                g.beginPath();
-                g.arc(X(r.x), Y(r.y), rad, 0, Math.PI * 2);
-                g.fill();
-                g.strokeStyle = '#ffffff';
-                g.lineWidth = 2;
-                g.stroke();
-
-                // Iconografía limpia
-                g.fillStyle = '#ffffff';
-                g.font = `bold ${rad * 1.0}px sans-serif`;
-                g.textAlign = 'center';
-                g.textBaseline = 'middle';
-                let icon = 'B';
-                if (r.tipo === 'Hospital') icon = '🏥';
-                else if (r.tipo === 'Colegio') icon = '🏫';
-                else icon = '🏠';
-
-                g.fillText(icon, X(r.x), Y(r.y));
-
-                // Etiqueta legible
-                g.fillStyle = '#07131c';
-                g.font = `bold ${sz(1.1)}px sans-serif`;
-                g.fillText(`#${r.id}`, X(r.x), Y(r.y) + rad + sz(1.2));
-
-                g.globalAlpha = 1;
-            }
-
-            // 6. Camiones Cisterna Animados Ilustrados
-            for (const k of S.trucks) {
-                if (k.busy && k.req && k.route && k.route.length > 1) {
-                    const p = Math.min(1, (k.tot - k.busy + (playing ? al : 0)) / k.tot);
-                    
-                    const totalSegments = k.route.length - 1;
-                    const scaledProgress = p * totalSegments;
-                    const segIdx = Math.min(Math.floor(scaledProgress), totalSegments - 1);
-                    const segFrac = scaledProgress - segIdx;
-
-                    const p1 = k.route[segIdx];
-                    const p2 = k.route[segIdx + 1];
-
-                    const cx = p1.x + (p2.x - p1.x) * segFrac;
-                    const cy = p1.y + (p2.y - p1.y) * segFrac;
-
-                    const x = X(cx);
-                    const y = Y(cy);
-
-                    const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-
-                    g.save();
-                    g.translate(x, y);
-                    g.rotate(angle);
-
-                    // Vehículo ilustrado gráfico
-                    const truckL = sz(2.8);
-                    const truckW = sz(1.6);
-
-                    // Sombra
-                    g.fillStyle = 'rgba(0,0,0,0.25)';
-                    g.fillRect(-truckL / 2 + 2, -truckW / 2 + 2, truckL, truckW);
-
-                    // Carrocería azul/blanca
-                    g.fillStyle = '#0284c7';
-                    g.beginPath();
-                    g.roundRect(-truckL / 2, -truckW / 2, truckL, truckW, 3);
-                    g.fill();
-
-                    // Tanque cilíndrico plateado/azul claro
-                    g.fillStyle = '#e0f2fe';
-                    g.beginPath();
-                    g.roundRect(-truckL / 2 + 2, -truckW / 2 + 2, truckL * 0.65, truckW - 4, 2);
-                    g.fill();
-
-                    // Parabrisas de cabina
-                    g.fillStyle = '#38bdf8';
-                    g.fillRect(truckL / 4, -truckW / 2 + 3, sz(0.5), truckW - 6);
-
-                    g.restore();
-                }
-            }
-
-            // 7. Centrales de Abastecimiento SEDAPAL
-            DEP.forEach((d, i) => {
-                const idle = S.trucks.filter(k => k.dep === i && !k.busy).length,
-                    tot = S.trucks.filter(k => k.dep === i).length;
-                const dx = X(d.x);
-                const dy = Y(d.y);
-                const r = sz(3.2);
-
-                // Base azul de central
-                g.fillStyle = '#0284c7';
-                g.beginPath();
-                g.arc(dx, dy, r, 0, Math.PI * 2);
-                g.fill();
-                g.strokeStyle = '#ffffff';
-                g.lineWidth = 2.5;
-                g.stroke();
-
-                // Icono Tanque/Agua
-                g.fillStyle = '#ffffff';
-                g.textAlign = 'center';
-                g.textBaseline = 'middle';
-                g.font = `bold ${sz(1.6)}px sans-serif`;
-                g.fillText('💧', dx, dy);
-
-                // Nombre y disponibilidad
-                g.fillStyle = '#07131c';
-                g.font = `bold ${sz(1.3)}px sans-serif`;
-                g.fillText(`${d.n} (${idle}/${tot})`, dx, dy + r + sz(1.4));
-            });
-
-            g.restore();
+            if (ts - lastInfo > 160) { lastInfo = ts; showInfo() }
         }
+
+        /* ---- selección, tarjeta de información y flota ---- */
+        const selTruck = () => {
+            if (!sel) return null;
+            if (sel.t === 'k') return S.trucks[sel.i];
+            if (sel.t === 'r') { const r = S.reqs.find(x => x.id === sel.id); return r && r.tk && r.tk.req === r ? r.tk : null }
+            return null
+        };
+        function infoHTML() {
+            if (!sel) return '';
+            const f = (a, b) => `<div><span>${a}</span><b>${b}</b></div>`, close = '<button class="g x" data-x="1" title="Cerrar">×</button>', spd = +$('#sp').value;
+            const eta = k => { const t = Math.max(0, k.out - (k.tot - k.busy + al)); return `${t.toFixed(1)} turnos (~${Math.ceil(t / spd)} s)` };
+            if (sel.t === 'r') {
+                const r = S.reqs.find(x => x.id === sel.id); if (!r) return '';
+                const [pl, pc] = urg(r), k = r.tk && r.tk.req === r ? r.tk : null, s = CITY.SITES[r.si];
+                return `<h3><span>#${r.id} · ${r.tipo}</span>${close}</h3>` + f('Estado', r.st === 'En Espera' ? 'En espera' : r.st) + f('Prioridad', `<i style="background:${pc}"></i>${pl}`) +
+                    f('Población afectada', r.pob.toLocaleString('es-PE')) + f('Días sin agua', ed(r).toFixed(1)) + f('Sector', CITY.SN[s.sec]) +
+                    f('Dist. por carretera', r.st === 'En Espera' ? `${r.dist.toFixed(1)} km (central ${DEP[r.near].n})` : `${r.km.toFixed(1)} km`) +
+                    f('Central asignada', r.dp != null ? DEP[r.dp].n : '—') + f('Camión', r.tk ? 'C' + r.tk.id : '—') +
+                    f('Llegada estimada', k && r.st === 'En Ruta' ? eta(k) : r.st === 'En Espera' ? `≥ ${Math.max(1, Math.ceil(r.dist / SPD))} turnos tras asignar` : r.st === 'Abasteciendo' ? 'En el destino' : '—') +
+                    (r.u != null && r.st === 'En Espera' && $('#ag').value === 'util' ? f('Utilidad', r.u.toFixed(1)) : '')
+            }
+            if (sel.t === 'k') {
+                const k = S.trucks[sel.i]; if (!k) return '';
+                const st = stTxt(k), r = k.req;
+                return `<h3><span>Cisterna C${k.id}</span>${close}</h3>` + f('Estado', st) + f('Origen', 'Central ' + DEP[k.dep].n) +
+                    f('Destino', r ? `#${r.id} ${r.tipo}` : '—') + f('Recorrido', r ? `${r.km.toFixed(1)} km ida (más vuelta)` : '—') +
+                    f('Progreso', r ? Math.round(clamp((k.tot - k.busy + al) / k.tot, 0, 1) * 100) + ' %' : '—') + (r && st === 'En ruta' ? f('Llegada estimada', eta(k)) : '')
+            }
+            const i = sel.i, ks = S.trucks.filter(k => k.dep === i);
+            return `<h3><span>Central ${DEP[i].n}</span>${close}</h3>` + f('Cisternas', ks.length) + f('Disponibles', ks.filter(k => !k.busy).length) + f('En ruta', ks.filter(k => stTxt(k) === 'En ruta').length) +
+                f('Abasteciendo', ks.filter(k => stTxt(k) === 'Abasteciendo').length) + f('Regresando', ks.filter(k => stTxt(k) === 'Regresando').length)
+        }
+        function showInfo(force) {
+            const h = infoHTML(), el = $('#info');
+            if (h !== infoTxt || force) { infoTxt = h; el.innerHTML = h; el.hidden = !h }
+        }
+        $('#info').onclick = e => { if (e.target.dataset.x) { sel = null; showInfo(true) } };
+        function fleet() {
+            let a = 0, b = 0, c = 0, d = 0;
+            for (const k of S.trucks) { if (!k.busy) a++; else { const e = k.tot - k.busy; e < k.out ? b++ : e === k.out ? c++ : d++ } }
+            $('#fleet').innerHTML = `<span><i style="background:#22c55e"></i>Disponibles <b>${a}</b></span><span><i style="background:#38bdf8"></i>En ruta <b>${b}</b></span><span><i style="background:#facc15"></i>Abasteciendo <b>${c}</b></span><span><i style="background:#a78bfa"></i>Regresando <b>${d}</b></span>`
+        }
+        function panels() { panels0(); fleet(); showInfo() }
+        const reset0 = reset;
+        reset = function () { sel = null; reset0(); Object.assign(V, { z: 1, cx: 50, cy: 50 }); $('#msg').textContent = ''; showInfo(true) };
+
+        /* ---- cámara y ratón ---- */
+        const pt = e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height } };
+        const pick = p => hits.filter(h => Math.hypot(h.x - p.x, h.y - p.y) <= h.r).sort((a, b) => b.p - a.p || Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+        const zoomAt = (f, px, py) => {
+            const s = SC(), wx = (px - cv.width / 2) / s + V.cx, wy = (py - cv.height / 2) / s + V.cy;
+            V.z = clamp(V.z * f, 1, 4); const s2 = SC(); V.cx = wx - (px - cv.width / 2) / s2; V.cy = wy - (py - cv.height / 2) / s2; clampV()
+        };
+        cv.onpointerdown = e => { cv.setPointerCapture(e.pointerId); drag = { x: e.clientX, y: e.clientY, cx: V.cx, cy: V.cy, m: 0 }; cv.style.cursor = 'grabbing' };
+        cv.onpointermove = e => {
+            const tip = $('#tip');
+            if (drag) {
+                const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+                if (Math.hypot(dx, dy) > 4) drag.m = 1;
+                if (drag.m) { V.cx = drag.cx - dx * dpr / SC(); V.cy = drag.cy - dy * dpr / SC(); clampV(); tip.style.display = 'none' }
+                return
+            }
+            const h = pick(pt(e)), r = $('#mapw').getBoundingClientRect();
+            if (h) { tip.textContent = h.tip; tip.style.display = 'block'; tip.style.left = Math.min(e.clientX - r.left + 14, r.width - 220) + 'px'; tip.style.top = e.clientY - r.top + 14 + 'px'; cv.style.cursor = 'pointer' }
+            else { tip.style.display = 'none'; cv.style.cursor = 'grab' }
+        };
+        cv.onpointerup = e => { if (drag && !drag.m) { const h = pick(pt(e)); sel = h ? h.ref : null; showInfo(true) } drag = null; cv.style.cursor = 'grab' };
+        cv.onpointerleave = () => { $('#tip').style.display = 'none' };
+        cv.onwheel = e => { e.preventDefault(); const p = pt(e); zoomAt(Math.exp(-e.deltaY * .0015), p.x, p.y) };
+        $('#zi').onclick = () => zoomAt(1.4, cv.width / 2, cv.height / 2);
+        $('#zo').onclick = () => zoomAt(1 / 1.4, cv.width / 2, cv.height / 2);
+        $('#zr').onclick = () => Object.assign(V, { z: 1, cx: 50, cy: 50 });
 
         function loop(ts) {
             const dt = Math.min(ts - last, 100);
@@ -1124,62 +1248,28 @@
             requestAnimationFrame(loop)
         }
 
-        /* ---------- Interacción Mouse y Zoom ---------- */
-        cv.addEventListener('mousedown', e => {
-            viewState.isDragging = true;
-            viewState.startX = e.clientX - viewState.offsetX;
-            viewState.startY = e.clientY - viewState.offsetY;
-        });
-
-        window.addEventListener('mousemove', e => {
-            if (!viewState.isDragging) return;
-            viewState.offsetX = e.clientX - viewState.startX;
-            viewState.offsetY = e.clientY - viewState.startY;
-        });
-
-        window.addEventListener('mouseup', () => {
-            viewState.isDragging = false;
-        });
-
-        cv.addEventListener('wheel', e => {
-            e.preventDefault();
-            const zoomIntensity = 0.1;
-            if (e.deltaY < 0) {
-                viewState.scale = Math.min(3, viewState.scale * (1 + zoomIntensity));
-            } else {
-                viewState.scale = Math.max(0.6, viewState.scale * (1 - zoomIntensity));
-            }
-        }, { passive: false });
-
-        $('#btn-reset-zoom').onclick = () => {
-            viewState.scale = 1;
-            viewState.offsetX = 0;
-            viewState.offsetY = 0;
-        };
-
         /* ---------- Eventos ---------- */
         $('#play').onclick = () => playing = true;
         $('#pause').onclick = () => playing = false;
         $('#reset').onclick = reset;
         $('#nt').onchange = reset;
         $('#ag').onchange = panels;
-        
         $('#send').onclick = () => {
-            const dp = DEP[+$('#fz').value],
-                dk = clamp(+$('#fd').value || 3, .5, 14) / KM;
-            let x, y, n = 0;
-            do {
-                const an = Math.random() * 6.283;
-                x = dp.x + Math.cos(an) * dk;
-                y = dp.y + Math.sin(an) * dk
-            } while ((x < 12 || x > 88 || y < 12 || y > 88) && ++n < 60);
-            add(S, {
-                tipo: $('#ft').value,
+            const tipo = $('#ft').value, dp = +$('#fz').value, dk = clamp(+$('#fd').value || 3, .5, 14);
+            let si = CITY.SB[tipo][0], bd = 1e9;
+            for (const i of CITY.SB[tipo]) {
+                const s = CITY.SITES[i], busy = S.reqs.some(r => r.si === i && r.st !== 'Abastecido');
+                const d = Math.abs((CITY.dij[dp].D[s.nd] + APP) * KM - dk) + (busy ? 1.5 : 0);
+                if (d < bd) { bd = d; si = i }
+            }
+            const r = add(S, {
+                tipo,
                 pob: clamp(+$('#fp').value || 400, 50, 1000),
                 d0: clamp(+$('#fy').value || 1, 1, 7),
-                x: clamp(x, 12, 88),
-                y: clamp(y, 12, 88)
+                si
             });
+            $('#msg').textContent = `Petición #${r.id}: ${tipo} en sector ${CITY.SN[CITY.SITES[si].sec]}, a ${rd(dp, r).toFixed(1)} km por calle de la central ${DEP[dp].n}.`;
+            sel = { t: 'r', id: r.id };
             panels()
         };
 
@@ -1190,7 +1280,6 @@
             reflejo: '#f59e0b',
             util: '#38bdf8'
         };
-
         $('#bb').onclick = async () => {
             const btn = $('#bb');
             btn.disabled = true;
@@ -1303,7 +1392,7 @@
 
         fit();
         reset();
-        requestAnimationFrame(loop);
+        requestAnimationFrame(loop); 
     </script>
 </body>
 
